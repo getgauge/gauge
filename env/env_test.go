@@ -62,7 +62,7 @@ func (s *MySuite) TestLoadDefaultEnvFromDirIfPresent(c *C) {
 func (s *MySuite) TestLoadDefaultEnvFromCustomDir(c *C) {
 	os.Clearenv()
 	config.ProjectRoot = "_testdata/proj9"
-	os.Setenv("gauge_env_dir", "customEnv")
+	_ = os.Setenv("gauge_env_dir", "customEnv")
 
 	e := LoadEnv(common.DefaultEnvDir, nil)
 
@@ -82,7 +82,7 @@ func (s *MySuite) TestLoadDefaultEnvFromCustomDir(c *C) {
 
 func (s *MySuite) TestLoadDefaultEnvFromDirIfPresentFromCustomDir(c *C) {
 	os.Clearenv()
-	os.Setenv("gauge_env_dir", "customEnv")
+	_ = os.Setenv("gauge_env_dir", "customEnv")
 	config.ProjectRoot = "_testdata/proj10"
 
 	e := LoadEnv("foo", nil)
@@ -166,9 +166,9 @@ func (s *MySuite) TestLoadDefaultEnvEvenIfDefaultEnvNotPresent(c *C) {
 
 func (s *MySuite) TestLoadDefaultEnvWithOtherPropertiesSetInShell(c *C) {
 	os.Clearenv()
-	os.Setenv("foo", "bar")
-	os.Setenv("logs_directory", "custom_logs_dir")
-	os.Setenv("gauge_specs_dir", "custom_specs_dir")
+	_ = os.Setenv("foo", "bar")
+	_ = os.Setenv("logs_directory", "custom_logs_dir")
+	_ = os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
 	e := LoadEnv(common.DefaultEnvDir, nil)
@@ -206,8 +206,8 @@ func (s *MySuite) TestLoadCustomEnvAlongWithDefaultEnv(c *C) {
 
 func (s *MySuite) TestLoadCustomEnvAlongWithOtherPropertiesSetInShell(c *C) {
 	os.Clearenv()
-	os.Setenv("gauge_reports_dir", "custom_reports_dir")
-	os.Setenv("gauge_specs_dir", "custom_specs_dir")
+	_ = os.Setenv("gauge_reports_dir", "custom_reports_dir")
+	_ = os.Setenv("gauge_specs_dir", "custom_specs_dir")
 	config.ProjectRoot = "_testdata/proj1"
 
 	e := LoadEnv("foo", nil)
@@ -255,7 +255,7 @@ func (s *MySuite) TestLoadMultipleEnvEnsureFirstOneDecides(c *C) {
 
 func (s *MySuite) TestEnvPropertyIsSet(c *C) {
 	os.Clearenv()
-	os.Setenv("foo", "bar")
+	_ = os.Setenv("foo", "bar")
 
 	actual := isPropertySet("foo")
 
@@ -280,8 +280,8 @@ func (s *MySuite) TestFatalErrorIsThrownIfEnvNotFound(c *C) {
 
 func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 	os.Clearenv()
-	os.Setenv("foo", "bar")
-	os.Setenv("property1", "value1")
+	_ = os.Setenv("foo", "bar")
+	_ = os.Setenv("property1", "value1")
 
 	config.ProjectRoot = "_testdata/proj3"
 
@@ -296,7 +296,7 @@ func (s *MySuite) TestLoadDefaultEnvWithSubstitutedVariables(c *C) {
 
 func (s *MySuite) TestLoadDefaultEmptyEnvWithSubstitutedVariables(c *C) {
 	os.Clearenv()
-	os.Setenv("property1", "")
+	_ = os.Setenv("property1", "")
 
 	config.ProjectRoot = "_testdata/proj1"
 
@@ -357,7 +357,7 @@ func (s *MySuite) TestGetDefaultSpecFileExtensions(c *C) {
 
 func (s *MySuite) TestGetSpecFileExtensionsSetViaEnv(c *C) {
 	os.Clearenv()
-	os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
+	_ = os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
 	var contains = func(c []string, what string) bool {
 		for _, x := range c {
 			if x == what {
@@ -375,7 +375,7 @@ func (s *MySuite) TestGetSpecFileExtensionsSetViaEnv(c *C) {
 
 func (s *MySuite) TestShouldNotGetDefaultExtensionsWhenEnvIsSet(c *C) {
 	os.Clearenv()
-	os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
+	_ = os.Setenv(gaugeSpecFileExtensions, ".foo, .bar")
 	var contains = func(c []string, what string) bool {
 		for _, x := range c {
 			if x == what {
@@ -414,7 +414,7 @@ func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromProperties(c *C) {
 
 func (s *MySuite) TestLoadEnvWithSubstitutedVariablesFromPropertiesAndSetInShell(c *C) {
 	os.Clearenv()
-	os.Setenv("service_url", "http://system.service.com")
+	_ = os.Setenv("service_url", "http://system.service.com")
 	config.ProjectRoot = "_testdata/proj4"
 	e := LoadEnv("foo", nil)
 	c.Assert(e, Equals, nil)

@@ -83,7 +83,9 @@ func (p *plugin) killGrpcProcess() error {
 	if p.gRPCConn == nil && p.pluginCmd == nil {
 		return nil
 	}
-	defer p.gRPCConn.Close()
+	defer func(gRPCConn *grpc.ClientConn) {
+		_ = gRPCConn.Close()
+	}(p.gRPCConn)
 
 	if isProcessRunning(p) {
 		exited := make(chan bool, 1)
@@ -118,7 +120,9 @@ func (p *plugin) kill(wg *sync.WaitGroup) error {
 		return p.killGrpcProcess()
 	}
 	if isProcessRunning(p) {
-		defer p.connection.Close()
+		defer func(connection net.Conn) {
+			_ = connection.Close()
+		}(p.connection)
 		p.killTimer = time.NewTimer(config.PluginKillTimeout())
 		err := conn.SendProcessKillMessage(p.connection)
 		if err != nil {
@@ -394,8 +398,8 @@ func GenerateDoc(pluginName string, specDirs []string, startAPIFunc func([]strin
 		path, _ := filepath.Abs(src)
 		sources = append(sources, path)
 	}
-	os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, "||"))
-	os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
+	_ = os.Setenv("GAUGE_SPEC_DIRS", strings.Join(sources, "||"))
+	_ = os.Setenv("GAUGE_PROJECT_ROOT", config.ProjectRoot)
 	if pd.hasCapability(gRPCSupportCapability) {
 		p, err := startPlugin(pd, docScope)
 		if err != nil {

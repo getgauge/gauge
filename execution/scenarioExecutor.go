@@ -73,7 +73,7 @@ func (e *scenarioExecutor) execute(i gauge.Item, r result.Result) {
 	}
 	e.notifyBeforeScenarioHook(scenarioResult)
 
-	if !(scenarioResult.GetFailed() || scenarioResult.GetSkippedScenario()) {
+	if !scenarioResult.GetFailed() && !scenarioResult.GetSkippedScenario() {
 		protoContexts := scenarioResult.ProtoScenario.GetContexts()
 		protoScenItems := scenarioResult.ProtoScenario.GetScenarioItems()
 		// context and steps are not appended together since sometime it cause the issue and the steps in step list and proto step list differs.

@@ -444,7 +444,9 @@ func (s *SpecInfoGatherer) watchForFileChanges() {
 	if err != nil {
 		logger.Errorf(false, "Error creating fileWatcher: %s", err)
 	}
-	defer watcher.Close()
+	defer func(watcher *fsnotify.Watcher) {
+		_ = watcher.Close()
+	}(watcher)
 
 	done := make(chan bool)
 	go func() {

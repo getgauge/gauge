@@ -47,7 +47,7 @@ func (s *MySuite) TestIfFailedFileIsCreated(c *C) {
 	content, _ := os.ReadFile(file)
 
 	c.Assert(string(content), Equals, expected)
-	os.RemoveAll(filepath.Join(config.ProjectRoot, common.DotGauge))
+	_ = os.RemoveAll(filepath.Join(config.ProjectRoot, common.DotGauge))
 }
 
 func (s *MySuite) TestGetScenarioFailedMetadata(c *C) {

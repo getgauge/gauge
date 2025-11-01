@@ -91,8 +91,10 @@ func TestGetLogFileWhenLogsDirNotSet(t *testing.T) {
 
 func TestGetLogFileInGaugeProjectWhenRelativeCustomLogsDirIsSet(t *testing.T) {
 	myLogsDir := "my_logs"
-	os.Setenv(logsDirectory, myLogsDir)
-	defer os.Unsetenv(logsDirectory)
+	_ = os.Setenv(logsDirectory, myLogsDir)
+	defer func() {
+		_ = os.Unsetenv(logsDirectory)
+	}()
 
 	config.ProjectRoot, _ = filepath.Abs("_testdata")
 	want := filepath.Join(config.ProjectRoot, myLogsDir, apiLogFileName)
@@ -110,8 +112,10 @@ func TestGetLogFileInGaugeProjectWhenAbsoluteCustomLogsDirIsSet(t *testing.T) {
 		t.Errorf("Unable to convert to absolute path, %s", err.Error())
 	}
 
-	os.Setenv(logsDirectory, myLogsDir)
-	defer os.Unsetenv(logsDirectory)
+	_ = os.Setenv(logsDirectory, myLogsDir)
+	defer func() {
+		_ = os.Unsetenv(logsDirectory)
+	}()
 
 	want := filepath.Join(myLogsDir, apiLogFileName)
 

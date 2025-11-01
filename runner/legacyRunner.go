@@ -54,7 +54,7 @@ func (r *LegacyRunner) EnsureConnected() bool {
 		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
 	opErr, ok := err.(*net.OpError)
-	if ok && !(opErr.Temporary() || opErr.Timeout()) {
+	if ok && !opErr.Temporary() && !opErr.Timeout() {
 		r.lostContact = true
 		logger.Fatalf(true, "Connection to runner with Pid %d lost. The runner probably quit unexpectedly. Inspect logs for potential reasons. Error : %s", r.Cmd.Process.Pid, err.Error())
 	}
@@ -73,7 +73,9 @@ func (r *LegacyRunner) IsMultithreaded() bool {
 
 func (r *LegacyRunner) Kill() error {
 	if r.Alive() {
-		defer r.connection.Close()
+		defer func(connection net.Conn) {
+			_ = connection.Close()
+		}(r.connection)
 		logger.Debug(true, "Sending kill message to runner.")
 		err := conn.SendProcessKillMessage(r.connection)
 		if err != nil {

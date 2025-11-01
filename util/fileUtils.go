@@ -127,7 +127,7 @@ func GaugeFileExtensions() []string {
 func FindAllNestedDirs(dir string) []string {
 	var nestedDirs []string
 	err := filepath.Walk(dir, func(path string, info os.FileInfo, err error) error {
-		if err == nil && info.IsDir() && !(path == dir) {
+		if err == nil && info.IsDir() && path != dir {
 			nestedDirs = append(nestedDirs, path)
 		}
 		return nil
@@ -275,7 +275,7 @@ func RemoveTempDir() {
 
 // GetLinesFromText gets lines of a text in an array
 func GetLinesFromText(text string) []string {
-	text = strings.Replace(text, "\r\n", "\n", -1)
+	text = strings.ReplaceAll(text, "\r\n", "\n")
 	return strings.Split(text, "\n")
 }
 

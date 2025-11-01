@@ -167,13 +167,13 @@ func (s *MySuite) TestGetConceptFiles(c *C) {
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsOutsideProjectRoot(c *C) {
 	config.ProjectRoot = "_testdata"
-	os.Setenv(env.SpecsDir, "../_testSpecDir")
+	_ = os.Setenv(env.SpecsDir, "../_testSpecDir")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenSpecDirIsWithInProject(c *C) {
 	config.ProjectRoot = "_testdata"
-	os.Setenv(env.SpecsDir, "_testdata/specs")
+	_ = os.Setenv(env.SpecsDir, "_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 2)
 }
 
@@ -181,20 +181,20 @@ func (s *MySuite) TestGetConceptFilesWhenConceptsDirSet(c *C) {
 	config.ProjectRoot = "_testdata"
 	c.Assert(len(GetConceptFiles()), Equals, 2)
 
-	os.Setenv(env.ConceptsDir, filepath.Join("specs", "concept1.cpt"))
+	_ = os.Setenv(env.ConceptsDir, filepath.Join("specs", "concept1.cpt"))
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 
-	os.Setenv(env.ConceptsDir, filepath.Join("specs", "subdir"))
+	_ = os.Setenv(env.ConceptsDir, filepath.Join("specs", "subdir"))
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 
 	conceptPath, _ := filepath.Abs(filepath.Join("_testdata", "specs", "subdir", "concept2.cpt"))
-	os.Setenv(env.ConceptsDir, conceptPath)
+	_ = os.Setenv(env.ConceptsDir, conceptPath)
 	c.Assert(len(GetConceptFiles()), Equals, 1)
 }
 
 func (s *MySuite) TestGetConceptFilesWhenConceptDirIsOutsideProjectRoot(c *C) {
 	config.ProjectRoot = "_testdata"
-	os.Setenv(env.ConceptsDir, "../_testSpecDir,../_testdata/specs")
+	_ = os.Setenv(env.ConceptsDir, "../_testSpecDir,../_testdata/specs")
 	c.Assert(len(GetConceptFiles()), Equals, 3)
 }
 
@@ -291,12 +291,12 @@ func (s *MySuite) TestGetConceptFilesWhenConceptsDirDoesNotExists(c *C) {
 	}
 	config.ProjectRoot = "_testdata"
 
-	os.Setenv(env.SpecsDir, "specs2")
+	_ = os.Setenv(env.SpecsDir, "specs2")
 	GetConceptFiles()
 	directory, _ := filepath.Abs(filepath.Join(config.ProjectRoot, "specs2"))
 	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or directory: %s", directory))
 
-	os.Setenv(env.SpecsDir, "_testSpecsDir,non-exisitng")
+	_ = os.Setenv(env.SpecsDir, "_testSpecsDir,non-exisitng")
 	GetConceptFiles()
 	directory, _ = filepath.Abs(filepath.Join(config.ProjectRoot, "non-exisitng"))
 	c.Assert(expectedErrorMessage, Equals, fmt.Sprintf("No such file or directory: %s", directory))

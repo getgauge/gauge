@@ -24,9 +24,10 @@ func (formatter *formatter) Specification(specification *gauge.Specification) {
 }
 
 func (formatter *formatter) Heading(heading *gauge.Heading) {
-	if heading.HeadingType == gauge.SpecHeading {
+	switch heading.HeadingType {
+	case gauge.SpecHeading:
 		formatter.buffer.WriteString(FormatHeading(heading.Value, "#"))
-	} else if heading.HeadingType == gauge.ScenarioHeading {
+	case gauge.ScenarioHeading:
 		formatter.buffer.WriteString(FormatHeading(heading.Value, "##"))
 	}
 }

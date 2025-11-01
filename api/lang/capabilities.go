@@ -92,7 +92,7 @@ func registerFileWatcher(conn jsonrpc2.JSONRPC2, ctx context.Context) error {
 	fileExtensions := strings.Join(util.GaugeFileExtensions(), ",")
 	regParams := didChangeWatchedFilesRegistrationOptions{
 		Watchers: []fileSystemWatcher{{
-			GlobPattern: strings.Replace(config.ProjectRoot, util.WindowsSep, util.UnixSep, -1) + "/**/*{" + fileExtensions + "}",
+			GlobPattern: strings.ReplaceAll(config.ProjectRoot, util.WindowsSep, util.UnixSep) + "/**/*{" + fileExtensions + "}",
 			Kind:        int(created) + int(deleted),
 		}},
 	}
