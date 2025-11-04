@@ -82,7 +82,7 @@ func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 	tagsMap := make(map[string]bool)
 	for _, tag := range stags {
 		tag = sanitize(tag)
-		tagsMap[strings.Replace(tag, " ", "", -1)] = true
+		tagsMap[strings.ReplaceAll(tag, " ", "")] = true
 	}
 	filter.replaceSpecialChar()
 	value, _ := filter.formatAndEvaluateExpression(tagsMap, filter.isTagPresent)
@@ -90,7 +90,7 @@ func (filter *ScenarioFilterBasedOnTags) filterTags(stags []string) bool {
 }
 
 func (filter *ScenarioFilterBasedOnTags) replaceSpecialChar() {
-	filter.tagExpression = strings.Replace(strings.Replace(strings.Replace(strings.Replace(filter.tagExpression, " ", "", -1), ",", "&", -1), "&&", "&", -1), "||", "|", -1)
+	filter.tagExpression = strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(strings.ReplaceAll(filter.tagExpression, " ", ""), ",", "&"), "&&", "&"), "||", "|")
 }
 
 func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map[string]bool, isTagQualified func(tagsMap map[string]bool, tagName string) bool) (bool, error) {
@@ -106,7 +106,7 @@ func (filter *ScenarioFilterBasedOnTags) formatAndEvaluateExpression(tagsMap map
 }
 
 func (filter *ScenarioFilterBasedOnTags) handleNegation(tagExpression string) string {
-	tagExpression = strings.Replace(strings.Replace(tagExpression, "!true", "false", -1), "!false", "true", -1)
+	tagExpression = strings.ReplaceAll(strings.ReplaceAll(tagExpression, "!true", "false"), "!false", "true")
 	for strings.Contains(tagExpression, "!(") {
 		tagExpression = filter.evaluateBrackets(tagExpression)
 	}
@@ -116,7 +116,7 @@ func (filter *ScenarioFilterBasedOnTags) handleNegation(tagExpression string) st
 func (filter *ScenarioFilterBasedOnTags) evaluateBrackets(tagExpression string) string {
 	if strings.Contains(tagExpression, "!(") {
 		innerText := filter.resolveBracketExpression(tagExpression)
-		return strings.Replace(tagExpression, "!("+innerText+")", filter.evaluateBrackets(innerText), -1)
+		return strings.ReplaceAll(tagExpression, "!("+innerText+")", filter.evaluateBrackets(innerText))
 	}
 	value, _ := filter.evaluateExp(tagExpression)
 	return strconv.FormatBool(!value)
@@ -127,9 +127,10 @@ func (filter *ScenarioFilterBasedOnTags) resolveBracketExpression(tagExpression 
 	bracketStack := make([]string, 0)
 	i := indexOfOpenBracket
 	for ; i < len(tagExpression); i++ {
-		if tagExpression[i] == '(' {
+		switch tagExpression[i] {
+		case '(':
 			bracketStack = append(bracketStack, "(")
-		} else if tagExpression[i] == ')' {
+		case ')':
 			bracketStack = bracketStack[:len(bracketStack)-1]
 		}
 		if len(bracketStack) == 0 {

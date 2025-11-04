@@ -197,7 +197,9 @@ func Write(text, file string) error {
 			return err
 		}
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	_, err = f.Write([]byte(text))
 	return err
 }
@@ -220,7 +222,9 @@ func GaugeVersionInPropertiesFile(name string) (*version.Version, error) {
 	if err != nil {
 		return v, err
 	}
-	defer f.Close()
+	defer func(f *os.File) {
+		_ = f.Close()
+	}(f)
 	r := bufio.NewReader(f)
 	l, _, err := r.ReadLine()
 	if err != nil {

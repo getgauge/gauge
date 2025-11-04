@@ -39,20 +39,20 @@ type extractor struct {
 }
 
 // ExtractConcept creates concept form the selected text and writes the concept to the given concept file.
-func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName string, changeAcrossProject bool, info *gm.TextInfo) (bool, error, []string) {
+func ExtractConcept(conceptName *gm.Step, steps []*gm.Step, conceptFileName string, info *gm.TextInfo) (bool, []string, error) {
 	content := SPEC_HEADING_TEMPLATE
 	if util.IsSpec(info.GetFileName()) {
 		content, _ = common.ReadFileContents(info.GetFileName())
 	}
 	concept, cptText, err := getExtractedConcept(conceptName, steps, content, info.GetFileName())
 	if err != nil {
-		return false, err, []string{}
+		return false, []string{}, err
 	}
 	err = writeConceptToFile(concept, cptText, conceptFileName, info.GetFileName(), info)
 	if err != nil {
-		return false, err, []string{}
+		return false, []string{}, err
 	}
-	return true, nil, []string{conceptFileName, info.GetFileName()}
+	return true, []string{conceptFileName, info.GetFileName()}, nil
 }
 
 // ReplaceExtractedStepsWithConcept replaces the steps selected for concept extraction with the concept name given.

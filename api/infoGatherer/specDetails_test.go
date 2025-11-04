@@ -49,7 +49,7 @@ func (s *MySuite) SetUpTest(c *C) {
 }
 
 func (s *MySuite) TearDownTest(c *C) {
-	os.RemoveAll(s.projectDir)
+	_ = os.RemoveAll(s.projectDir)
 }
 
 func (s *MySuite) buildTestData() {

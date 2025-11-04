@@ -224,8 +224,12 @@ func (handler *gaugeAPIMessageHandler) performRefresh(files []string) {
 
 func (handler *gaugeAPIMessageHandler) extractConcept(message *gauge_messages.APIMessage) *gauge_messages.APIMessage {
 	request := message.GetExtractConceptRequest()
-	success, err, filesChanged := conceptExtractor.ExtractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetChangeAcrossProject(), request.GetSelectedTextInfo())
-	response := &gauge_messages.ExtractConceptResponse{IsSuccess: success, Error: err.Error(), FilesChanged: filesChanged}
+	success, filesChanged, err := conceptExtractor.ExtractConcept(request.GetConceptName(), request.GetSteps(), request.GetConceptFileName(), request.GetSelectedTextInfo())
+	var errorString string
+	if err != nil {
+		errorString = err.Error()
+	}
+	response := &gauge_messages.ExtractConceptResponse{IsSuccess: success, Error: errorString, FilesChanged: filesChanged}
 	return &gauge_messages.APIMessage{MessageId: message.MessageId, MessageType: gauge_messages.APIMessage_ExtractConceptResponse, ExtractConceptResponse: response}
 }
 

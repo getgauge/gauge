@@ -32,7 +32,7 @@ func formatSpec(specHeading string) string {
 }
 
 func indent(text string, indentation int) string {
-	return spaces(indentation) + strings.Replace(text, newline, newline+spaces(indentation), -1)
+	return spaces(indentation) + strings.ReplaceAll(text, newline, newline+spaces(indentation))
 }
 
 func spaces(numOfSpaces int) string {

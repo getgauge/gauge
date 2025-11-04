@@ -445,7 +445,8 @@ func TestExecuteAfterSpecHook(t *testing.T) {
 
 	afterSpecHookCalled := false
 	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+		switch m.MessageType {
+		case gauge_messages.Message_SpecExecutionEnding:
 			afterSpecHookCalled = true
 		}
 		return &gauge_messages.ProtoExecutionResult{}
@@ -464,13 +465,14 @@ func TestExecuteAddsSpecHookExecutionMessages(t *testing.T) {
 	mockHandler := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+		switch m.MessageType {
+		case gauge_messages.Message_SpecExecutionEnding:
 			return &gauge_messages.ProtoExecutionResult{
 				Message:       []string{"After Spec Called"},
 				Failed:        false,
 				ExecutionTime: 10,
 			}
-		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+		case gauge_messages.Message_SpecExecutionStarting:
 			return &gauge_messages.ProtoExecutionResult{
 				Message:       []string{"Before Spec Called"},
 				Failed:        false,
@@ -505,13 +507,14 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 	mockHandler := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
 
 	mockRunner.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
-		if m.MessageType == gauge_messages.Message_SpecExecutionEnding {
+		switch m.MessageType {
+		case gauge_messages.Message_SpecExecutionEnding:
 			return &gauge_messages.ProtoExecutionResult{
 				ScreenshotFiles: []string{"screenshot1.png", "screenshot2.png"},
 				Failed:          false,
 				ExecutionTime:   10,
 			}
-		} else if m.MessageType == gauge_messages.Message_SpecExecutionStarting {
+		case gauge_messages.Message_SpecExecutionStarting:
 			return &gauge_messages.ProtoExecutionResult{
 				ScreenshotFiles: []string{"screenshot3.png", "screenshot4.png"},
 				Failed:          false,
@@ -532,7 +535,7 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(beforeSpecScreenshots))
 	}
 	for i, e := range expectedBeforeSpecScreenshots {
-		if string(beforeSpecScreenshots[i]) != e {
+		if beforeSpecScreenshots[i] != e {
 			t.Errorf("Expected `%s` screenshot, got : %s", e, beforeSpecScreenshots[i])
 		}
 	}
@@ -540,7 +543,7 @@ func TestExecuteAddsSpecHookExecutionScreenshots(t *testing.T) {
 		t.Errorf("Expected 2 screenshots, got : %d", len(afterSpecScreenshots))
 	}
 	for i, e := range expectedAfterSpecScreenshots {
-		if string(afterSpecScreenshots[i]) != e {
+		if afterSpecScreenshots[i] != e {
 			t.Errorf("Expected `%s` screenshot, got : %s", e, afterSpecScreenshots[i])
 		}
 	}
@@ -733,15 +736,14 @@ func TestExecuteScenarioShoulHaveRetriesInfo(t *testing.T) {
 	if sceResult.GetFailed() {
 		t.Errorf("Expect sceResult.GetFailed() = false, got true")
 	}
-	if se.currentExecutionInfo.CurrentScenario.Retries.MaxRetries != int32(MaxRetriesCount - 1) {
-		t.Errorf("Expected MaxRetries %d, got %d", 
-			int32(MaxRetriesCount - 1), 
+	if se.currentExecutionInfo.CurrentScenario.Retries.MaxRetries != int32(MaxRetriesCount-1) {
+		t.Errorf("Expected MaxRetries %d, got %d",
+			int32(MaxRetriesCount-1),
 			se.currentExecutionInfo.CurrentScenario.Retries.MaxRetries)
 	}
-	if se.currentExecutionInfo.CurrentScenario.Retries.CurrentRetry != int32(MaxRetriesCount - 1) {
-		t.Errorf("Expected CurrentRetry %d, got %d", 
-			int32(MaxRetriesCount - 1), 
+	if se.currentExecutionInfo.CurrentScenario.Retries.CurrentRetry != int32(MaxRetriesCount-1) {
+		t.Errorf("Expected CurrentRetry %d, got %d",
+			int32(MaxRetriesCount-1),
 			se.currentExecutionInfo.CurrentScenario.Retries.CurrentRetry)
 	}
 }
-

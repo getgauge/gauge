@@ -8,6 +8,7 @@ package install
 
 import (
 	"fmt"
+	"io"
 	"net/http"
 	"regexp"
 	"runtime/debug"
@@ -149,7 +150,9 @@ var getLatestGaugeVersion = func(url string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	defer res.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(res.Body)
 
 	v, err := getGaugeVersionFromURL(res.Request.URL.String())
 	if err != nil {
@@ -159,7 +162,7 @@ var getLatestGaugeVersion = func(url string) (string, error) {
 }
 
 func getGaugeVersionFromURL(url string) (string, error) {
-	versionString := strings.Replace(url, gauge_releases_url, "", -1)
+	versionString := strings.ReplaceAll(url, gauge_releases_url, "")
 	reg, err := regexp.Compile(`tag/v(\d.*)`)
 	if err != nil {
 		return "", fmt.Errorf("unable to compile regex 'tag/v(\\d.*)': %s", err.Error())

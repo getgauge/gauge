@@ -79,7 +79,7 @@ func TestMergedProperties(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	os.Setenv("GAUGE_HOME", s)
+	_ = os.Setenv("GAUGE_HOME", s)
 
 	p, err := mergedProperties()
 	if err != nil {
@@ -94,7 +94,7 @@ func TestMergedProperties(t *testing.T) {
 	if got != want {
 		t.Errorf("Properties Merge failed, want: %s == `%s`, got `%s`", checkUpdates, want, got)
 	}
-	os.Setenv("GAUGE_HOME", "")
+	_ = os.Setenv("GAUGE_HOME", "")
 	err = os.Remove(idFile)
 	if err != nil {
 		t.Error(err)
@@ -188,7 +188,7 @@ func TestPropertiesStringConcurrent(t *testing.T) {
 
 func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	oldEnv := os.Getenv("GAUGE_HOME")
-	os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
+	_ = os.Setenv("GAUGE_HOME", filepath.Join(".", "_testData"))
 	propFile := filepath.Join("_testData", "config", "gauge.properties")
 	err := os.WriteFile(propFile, []byte("# Version 0.8.0"), common.NewFilePermissions)
 	if err != nil {
@@ -208,6 +208,6 @@ func TestWriteGaugePropertiesOnlyForNewVersion(t *testing.T) {
 	if got.String() != want {
 		t.Errorf("Expected Gauge Version in gauge.properties %s, got %s", want, got)
 	}
-	os.Setenv("GAUGE_HOME", oldEnv)
-	os.Remove(propFile)
+	_ = os.Setenv("GAUGE_HOME", oldEnv)
+	_ = os.Remove(propFile)
 }

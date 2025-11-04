@@ -31,8 +31,8 @@ func ConvertURItoFilePath(uri lsp.DocumentURI) string {
 
 func convertURIToWindowsPath(uri string) string {
 	uri = strings.TrimPrefix(uri, uriPrefix+UnixSep)
-	uri = strings.Replace(uri, windowColonRep, colon, -1)
-	path, _ := url.PathUnescape(strings.Replace(uri, UnixSep, WindowsSep, -1))
+	uri = strings.ReplaceAll(uri, windowColonRep, colon)
+	path, _ := url.PathUnescape(strings.ReplaceAll(uri, UnixSep, WindowsSep))
 	return path
 }
 
@@ -50,9 +50,9 @@ func ConvertPathToURI(path string) lsp.DocumentURI {
 }
 
 func convertWindowsPathToURI(path string) string {
-	path = strings.Replace(path, WindowsSep, UnixSep, -1)
+	path = strings.ReplaceAll(path, WindowsSep, UnixSep)
 	encodedPath := url.URL{Path: path}
-	path = strings.Replace(strings.TrimPrefix(encodedPath.String(), "./"), colon, windowColonRep, -1)
+	path = strings.ReplaceAll(strings.TrimPrefix(encodedPath.String(), "./"), colon, windowColonRep)
 	return uriPrefix + UnixSep + path
 }
 
