@@ -452,3 +452,23 @@ func (s *MySuite) TestLoadEnvWithAcyclicProperties(c *C) {
 	c.Assert(os.Getenv("e"), Equals, "foo")
 	c.Assert(os.Getenv("f"), Equals, "foo")
 }
+
+func (s *MySuite) TestScenarioInitStrategyDefaultsToEager(c *C) {
+	os.Clearenv()
+	strategy := ScenarioInitStrategy()
+	c.Assert(strategy, Equals, "eager")
+}
+
+func (s *MySuite) TestScenarioInitStrategyReturnsLazy(c *C) {
+	os.Clearenv()
+	os.Setenv("scenario_init_strategy", "lazy")
+	strategy := ScenarioInitStrategy()
+	c.Assert(strategy, Equals, "lazy")
+}
+
+func (s *MySuite) TestScenarioInitStrategyWithInvalidValueDefaultsToEager(c *C) {
+	os.Clearenv()
+	os.Setenv("scenario_init_strategy", "invalid")
+	strategy := ScenarioInitStrategy()
+	c.Assert(strategy, Equals, "eager")
+}
