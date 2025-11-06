@@ -362,7 +362,7 @@ func (e *specExecutor) executeScenario(scenario *gauge.Scenario) (*result.Scenar
 			e.specResult.ScenarioSkippedCount++
 		}
 
-		if !(shouldRetry && scenarioResult.GetFailed()) {
+		if !shouldRetry || !scenarioResult.GetFailed() {
 			break
 		}
 	}

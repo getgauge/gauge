@@ -178,7 +178,7 @@ func TestGetLanguageQueryParam(t *testing.T) {
 
 func TestGetPluginsWithoutScope(t *testing.T) {
 	path, _ := filepath.Abs(filepath.Join("_testdata"))
-	os.Setenv(common.GaugeHome, path)
+	_ = os.Setenv(common.GaugeHome, path)
 
 	got := PluginsWithoutScope()
 

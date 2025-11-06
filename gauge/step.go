@@ -266,7 +266,7 @@ func (step Step) Kind() TokenKind {
 }
 
 func replaceParamChar(text string) string {
-	return strings.Replace(strings.Replace(text, "<", "{", -1), ">", "}", -1)
+	return strings.ReplaceAll(strings.ReplaceAll(text, "<", "{"), ">", "}")
 }
 
 func UsesArgs(steps []*Step, args ...string) bool {

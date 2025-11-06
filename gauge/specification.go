@@ -177,7 +177,7 @@ func (spec *Specification) removeItem(itemIndex int) {
 	copy(items, spec.Items)
 	if len(spec.Items)-1 == itemIndex {
 		spec.Items = items[:itemIndex]
-	} else if 0 == itemIndex {
+	} else if itemIndex == 0 {
 		spec.Items = items[itemIndex+1:]
 	} else {
 		spec.Items = append(items[:itemIndex], items[itemIndex+1:]...)

@@ -42,7 +42,7 @@ func TestRunnerRequestTimeout(t *testing.T) {
 		t.Errorf("Expected RunnerRequestTimeout == defaultRunnerRequestTimeout(%f), got %f", expected1, got1)
 	}
 
-	os.Setenv(runnerRequestTimeout, "1000")
+	_ = os.Setenv(runnerRequestTimeout, "1000")
 	got1 = RunnerRequestTimeout().Seconds()
 	expected1 = float64(1)
 	if got != expected {

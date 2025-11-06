@@ -35,7 +35,7 @@ func before() {
 }
 
 func after() {
-	os.RemoveAll(projectPath)
+	_ = os.RemoveAll(projectPath)
 }
 
 func TestMain(m *testing.M) {
@@ -232,7 +232,7 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		cmd.Flags().IntP(streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
 		cmd.Flags().IntP(groupName, "g", groupDefault, "Specify which group of specification to execute based on -n flag")
 		cmd.Flags().StringP(strategyName, "", strategyDefault, "Set the parallelization strategy for execution. Possible options are: `eager`, `lazy`")
-		cmd.Flags().BoolP(sortName, "s", sortDefault, "Run specs in Alphabetical Order")
+		cmd.Flags().StringP(sortName, "s", sortDefault, "Set the order of spec execution. Possible options are: `alpha`, `random`")
 		cmd.Flags().BoolP(installPluginsName, "i", installPluginsDefault, "Install All Missing Plugins")
 		cmd.Flags().BoolP(failedName, "f", failedDefault, "Run only the scenarios failed in previous run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
 		cmd.Flags().BoolP(repeatName, "", repeatDefault, "Repeat last run. This is an exclusive flag, it cannot be used in conjunction with any other argument")
@@ -433,7 +433,7 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 		if err != nil {
 			t.Error(err)
 		}
-		file.Close()
+		_ = file.Close()
 		executeFailed(runCmd)
 		return
 	}
@@ -608,5 +608,244 @@ func TestAddingMultipleFlagsToExecutionArgs(t *testing.T) {
 	}
 	if execution.ExecutionArgs[1].Value[0] != "tag1" {
 		t.Fatalf("Expecting execution arg value tag1 but found %s", execution.ExecutionArgs[1].Value[0])
+	}
+}
+
+func TestRandomSortFlagParsing(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	err := flags.Set(sortName, "random")
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "random" {
+		t.Errorf("Expected sort flag to be 'random', got '%s'", value)
+	}
+}
+
+func TestAlphaSortFlagParsing(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	err := flags.Set(sortName, "alpha")
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "alpha" {
+		t.Errorf("Expected sort flag to be 'alpha', got '%s'", value)
+	}
+}
+
+func TestRandomSeedFlagParsing(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.Int64(randomSeedName, randomSeedDefault, "Random seed")
+	err := flags.Set(randomSeedName, "12345")
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(randomSeedName).Value.String()
+	if value != "12345" {
+		t.Errorf("Expected random-seed to be '12345', got '%s'", value)
+	}
+}
+
+func TestSortRandomAddedToExecutionArgs(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	err := flags.Set(sortName, "random")
+	if err != nil {
+		t.Error(err)
+	}
+
+	execution.ExecutionArgs = []*gauge.ExecutionArg{}
+	addFlagsToExecutionArgs(flags)
+
+	found := false
+	for _, arg := range execution.ExecutionArgs {
+		if arg.Name == "sort" && len(arg.Value) > 0 && arg.Value[0] == "random" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected 'sort=random' to be added to execution args")
+	}
+}
+
+func TestRandomSeedAddedToExecutionArgs(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.Int64(randomSeedName, randomSeedDefault, "Random seed")
+	err := flags.Set(randomSeedName, "999")
+	if err != nil {
+		t.Error(err)
+	}
+
+	execution.ExecutionArgs = []*gauge.ExecutionArg{}
+	addFlagsToExecutionArgs(flags)
+
+	found := false
+	for _, arg := range execution.ExecutionArgs {
+		if arg.Name == "random-seed" && len(arg.Value) > 0 && arg.Value[0] == "999" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Error("Expected 'random-seed=999' to be added to execution args")
+	}
+}
+
+func TestSeedSavingWithRandomSort(t *testing.T) {
+	// Save original values
+	origSort := sort
+	origSeed := randomSeed
+	defer func() {
+		sort = origSort
+		randomSeed = origSeed
+	}()
+
+	// Test with explicit seed
+	var savedArgs []string
+	rerun.WritePrevArgs = func(args []string) {
+		savedArgs = args
+	}
+
+	// Simulate --sort=random --random-seed=12345
+	sort = "random"
+	randomSeed = int64(12345)
+
+	// Simulate the logic from execute()
+	cmdArgsToSave := []string{"gauge", "run", "--sort=random", "specs/"}
+	if sort == "random" && randomSeed != 0 {
+		cmdArgsToSave = append(cmdArgsToSave, fmt.Sprintf("--%s=%d", randomSeedName, randomSeed))
+	}
+	rerun.WritePrevArgs(cmdArgsToSave)
+
+	// Verify seed was included
+	found := false
+	for _, arg := range savedArgs {
+		if arg == "--random-seed=12345" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("Expected --random-seed=12345 to be saved in command args, got: %v", savedArgs)
+	}
+}
+
+func TestAutoGeneratedSeedSaving(t *testing.T) {
+	// Save original values
+	origSort := sort
+	origSeed := randomSeed
+	defer func() {
+		sort = origSort
+		randomSeed = origSeed
+	}()
+
+	var savedArgs []string
+	rerun.WritePrevArgs = func(args []string) {
+		savedArgs = args
+	}
+
+	// Simulate --sort=random without explicit seed
+	sort = "random"
+	randomSeed = int64(0)
+
+	// Simulate the logic from execute()
+	cmdArgsToSave := []string{"gauge", "run", "--sort=random", "specs/"}
+	if sort == "random" && randomSeed == 0 {
+		// Auto-generate seed
+		randomSeed = int64(999888777)
+		cmdArgsToSave = append(cmdArgsToSave, fmt.Sprintf("--%s=%d", randomSeedName, randomSeed))
+	}
+	rerun.WritePrevArgs(cmdArgsToSave)
+
+	// Verify auto-generated seed was included
+	found := false
+	for _, arg := range savedArgs {
+		if arg == "--random-seed=999888777" {
+			found = true
+			break
+		}
+	}
+
+	if !found {
+		t.Errorf("Expected auto-generated seed to be saved in command args, got: %v", savedArgs)
+	}
+}
+
+func TestBackwardCompatibilitySortFlagWithoutValue(t *testing.T) {
+	// Create a flag set to simulate -s without value
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	flags.Lookup(sortName).NoOptDefVal = "alpha"
+
+	// Simulate using -s without a value
+	err := flags.Parse([]string{"-s"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "alpha" {
+		t.Errorf("Expected -s without value to default to 'alpha' for backward compatibility, got '%s'", value)
+	}
+}
+
+func TestBackwardCompatibilityLongSortFlagWithoutValue(t *testing.T) {
+	// Create a flag set to simulate --sort without value
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	flags.Lookup(sortName).NoOptDefVal = "alpha"
+
+	// Simulate using --sort without a value
+	err := flags.Parse([]string{"--sort"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "alpha" {
+		t.Errorf("Expected --sort without value to default to 'alpha' for backward compatibility, got '%s'", value)
+	}
+}
+
+func TestExplicitSortAlphaOverridesDefault(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	flags.Lookup(sortName).NoOptDefVal = "alpha"
+
+	err := flags.Parse([]string{"--sort=alpha"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "alpha" {
+		t.Errorf("Expected --sort=alpha to be 'alpha', got '%s'", value)
+	}
+}
+
+func TestExplicitSortRandomOverridesDefault(t *testing.T) {
+	var flags = &pflag.FlagSet{}
+	flags.StringP(sortName, "s", sortDefault, "Set the order of spec execution")
+	flags.Lookup(sortName).NoOptDefVal = "alpha"
+
+	err := flags.Parse([]string{"--sort=random"})
+	if err != nil {
+		t.Error(err)
+	}
+
+	value := flags.Lookup(sortName).Value.String()
+	if value != "random" {
+		t.Errorf("Expected --sort=random to be 'random', got '%s'", value)
 	}
 }

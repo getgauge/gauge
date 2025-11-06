@@ -42,9 +42,9 @@ jobs:
           check-latest: true
           go-version-file: 'go.mod'
       - name: Set up Nodejs
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           cache: 'npm'
           cache-dependency-path: 'build/npm/package-lock.json'
 
@@ -185,7 +185,7 @@ jobs:
           ./gradlew clean jsFT
 
       - name: Upload logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         if: failure()
         with:
           name: ft-logs-${{ matrix.os }}
@@ -223,7 +223,7 @@ jobs:
         run: go run build/make.go  && go run build/make.go --distro
 
       - name: Upload artifacts for ${{ matrix.os }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: gauge-artifact-for-${{ matrix.os }}
           path: deploy
@@ -283,7 +283,7 @@ jobs:
           ./run.sh
 
       - name: Upload benchmark
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: ${{matrix.project}}_${{matrix.parallel}}
           path: gauge-benchmarks/out
@@ -302,7 +302,7 @@ jobs:
           path: gauge-benchmarks
           ref: master
       - name: Download benchmark results
-        uses: actions/download-artifact@v5
+        uses: actions/download-artifact@v6
         with:
           path: gauge-benchmarks/out/
       - name: Generate Comment String
@@ -311,7 +311,7 @@ jobs:
           cd gauge-benchmarks
           ./generate_summary.sh > out/results.md
       - name: Publish Benchmark Result
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v5
         with:
           name: benchmark
           path: gauge-benchmarks/out/results.md

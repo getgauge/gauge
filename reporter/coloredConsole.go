@@ -90,7 +90,7 @@ func (c *coloredConsole) StepStart(stepText string) {
 
 func (c *coloredConsole) StepEnd(step gauge.Step, res result.Result, execInfo *gauge_messages.ExecutionInfo) {
 	stepRes := res.(*result.StepResult)
-	if !(hookFailed(res.GetPreHook) || hookFailed(res.GetPostHook)) {
+	if !hookFailed(res.GetPreHook) && !hookFailed(res.GetPostHook) {
 		if stepRes.GetStepFailed() {
 			c.displayMessage(getFailureSymbol(), ct.Red)
 		} else {
@@ -160,8 +160,8 @@ func (c *coloredConsole) Write(b []byte) (int, error) {
 func (c *coloredConsole) displayMessage(msg string, color ct.Color) {
 	ct.Foreground(color, false)
 	defer ct.ResetColor()
-	fmt.Fprint(c.writer, msg)
-	c.writer.Print()
+	_, _ = fmt.Fprint(c.writer, msg)
+	_ = c.writer.Print()
 }
 
 func printHookFailureCC(c *coloredConsole, res result.Result, hookFailure func() []*gauge_messages.ProtoHookFailure) bool {

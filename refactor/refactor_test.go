@@ -502,7 +502,7 @@ func (s *MySuite) TestRefactoringExternalSteps(c *C) {
 		},
 	}
 
-	stepName, err, _ := agent.getStepNameFromRunner(r)
+	stepName, _, err := agent.getStepNameFromRunner(r)
 	c.Assert(err, NotNil)
 	c.Assert(err.Error(), Equals, "external step: Cannot refactor 'first step' is in external project or library")
 	c.Assert(stepName, Equals, "")

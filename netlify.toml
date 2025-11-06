@@ -2,4 +2,4 @@
   command = "go get ./build/man/ && go run build/man/man.go && cp _redirects ./_man/html/_redirects"
   publish = "_man/html"
 [build.environment]
-  GO_VERSION = "1.24.x"
+  GO_VERSION = "1.25.x"

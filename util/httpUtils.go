@@ -63,13 +63,17 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
 	}
 
-	defer resp.Body.Close()
+	defer func(Body io.ReadCloser) {
+		_ = Body.Close()
+	}(resp.Body)
 
 	out, err := os.Create(targetFile)
 	if err != nil {
 		return "", err
 	}
-	defer out.Close()
+	defer func(out *os.File) {
+		_ = out.Close()
+	}(out)
 	if silent {
 		_, err = io.Copy(out, resp.Body)
 	} else {
