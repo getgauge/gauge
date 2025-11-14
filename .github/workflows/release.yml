@@ -19,7 +19,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Compile gauge
-        run: go run build/make.go --all-platforms  --skip-windows
+        run: go run build/make.go --all-platforms --skip-windows
 
       - name: Create distro
         run: |
@@ -44,7 +44,7 @@ jobs:
 
       - name: Compile gauge
         run: |
-          go run build/make.go --verbose --all-platforms
+          go run build/make.go --verbose --all-platforms --skip-non-windows
           Get-ChildItem -Recurse .\bin
 
       - name: Install NSIS
@@ -59,8 +59,8 @@ jobs:
 
       - name: Create Distro
         run: |
+          go run build/make.go --distro --bin-dir bin\windows_arm64
           go run build/make.go --distro --bin-dir bin\windows_amd64
-          go run build/make.go --distro --bin-dir bin\windows_386
 
       - name: Upload artifacts
         uses: actions/upload-artifact@v5
