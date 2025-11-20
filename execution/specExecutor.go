@@ -105,6 +105,8 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 			}
 			e.specResult.AddScenarioResults(results)
 			scnMap := make(map[int]bool)
+
+			// Execute eager table-driven scenarios
 			for _, s := range tableDriven {
 				if _, ok := scnMap[s.Span.Start]; !ok {
 					scnMap[s.Span.Start] = true
@@ -116,6 +118,24 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(s.DataTable.Table),
 					s.ScenarioDataTableRowIndex, s.SpecDataTableRowIndex, s.SpecDataTableRow.IsInitialized())
 			}
+
+			// Execute lazy scenario collections
+			for _, lazyCollection := range e.specification.LazyScenarios {
+				if _, ok := scnMap[lazyCollection.Template.Span.Start]; !ok {
+					scnMap[lazyCollection.Template.Span.Start] = true
+				}
+
+				iterator := lazyCollection.Iterator()
+				for scenario, hasNext := iterator.Next(); hasNext; scenario, hasNext = iterator.Next() {
+					r, err := e.executeScenario(scenario)
+					if err != nil {
+						logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+					}
+					e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(scenario.DataTable.Table),
+						scenario.ScenarioDataTableRowIndex, scenario.SpecDataTableRowIndex, scenario.SpecDataTableRow.IsInitialized())
+				}
+			}
+
 			e.specResult.ScenarioCount += len(scnMap)
 		} else {
 			err := e.executeSpec()
@@ -161,6 +181,28 @@ func (e *specExecutor) executeSpec() error {
 	if err != nil {
 		return err
 	}
+
+	// Execute lazy scenario collections
+	scnMap := make(map[int]bool)
+	for _, scenario := range e.specification.Scenarios {
+		scnMap[scenario.Span.Start] = true
+	}
+	for _, lazyCollection := range e.specification.LazyScenarios {
+		if _, ok := scnMap[lazyCollection.Template.Span.Start]; !ok {
+			scnMap[lazyCollection.Template.Span.Start] = true
+		}
+
+		iterator := lazyCollection.Iterator()
+		for scenario, hasNext := iterator.Next(); hasNext; scenario, hasNext = iterator.Next() {
+			r, err := e.executeScenario(scenario)
+			if err != nil {
+				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
+			}
+			e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(scenario.DataTable.Table),
+				scenario.ScenarioDataTableRowIndex, scenario.SpecDataTableRowIndex, scenario.SpecDataTableRow.IsInitialized())
+		}
+	}
+
 	return nil
 }
 
