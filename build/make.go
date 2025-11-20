@@ -144,7 +144,8 @@ var targetLinux = flag.Bool("target-linux", false, "Compiles for linux only, bot
 var binDir = flag.String("bin-dir", "", "Specifies OS_PLATFORM specific binaries to install when cross compiling")
 var distro = flag.Bool("distro", false, "Create gauge distributable")
 var verbose = flag.Bool("verbose", false, "Print verbose details")
-var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributable on unix machines while cross platform compilation")
+var skipWindowsDistro = flag.Bool("skip-windows", false, "Skips creation of windows distributables on unix machines during cross platform compilation")
+var skipNonWindowsDistro = flag.Bool("skip-non-windows", false, "Skips creation of non-windows distributables during cross platform compilation")
 var certFile = flag.String("certFile", "", "Should be passed for signing the windows installer")
 
 // Defines all the compile targets
@@ -158,7 +159,7 @@ var (
 		{GOARCH: ARM64, GOOS: linux, CGO_ENABLED: "0"},
 		{GOARCH: X86, GOOS: freebsd, CGO_ENABLED: "0"},
 		{GOARCH: X86_64, GOOS: freebsd, CGO_ENABLED: "0"},
-		{GOARCH: X86, GOOS: windows, CGO_ENABLED: "0"},
+		{GOARCH: ARM64, GOOS: windows, CGO_ENABLED: "0"},
 		{GOARCH: X86_64, GOOS: windows, CGO_ENABLED: "0"},
 	}
 	osDistroMap = map[string]distroFunc{windows: createWindowsDistro, linux: createLinuxPackage, freebsd: createLinuxPackage, darwin: createDarwinPackage}
@@ -295,25 +296,29 @@ func signExecutable(exeFilePath string, certFilePath string) {
 }
 
 func createDarwinPackage() {
-	distroDir := filepath.Join(deploy, packageName())
-	copyGaugeBinaries(distroDir)
-	if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
-		log.Printf("No signing identity found . Executable won't be signed.")
-	} else {
-		runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
-	}
-	createZipFromUtil(deploy, packageName(), packageName())
-	if err := os.RemoveAll(distroDir); err != nil {
-		log.Printf("failed to remove %s", distroDir)
+	if !*skipNonWindowsDistro {
+		distroDir := filepath.Join(deploy, packageName())
+		copyGaugeBinaries(distroDir)
+		if id := os.Getenv("OS_SIGNING_IDENTITY"); id == "" {
+			log.Printf("No signing identity found . Executable won't be signed.")
+		} else {
+			runProcess("codesign", "-s", id, "--force", "--deep", filepath.Join(distroDir, gauge))
+		}
+		createZipFromUtil(deploy, packageName(), packageName())
+		if err := os.RemoveAll(distroDir); err != nil {
+			log.Printf("failed to remove %s", distroDir)
+		}
 	}
 }
 
 func createLinuxPackage() {
-	distroDir := filepath.Join(deploy, packageName())
-	copyGaugeBinaries(distroDir)
-	createZipFromUtil(deploy, packageName(), packageName())
-	if err := os.RemoveAll(distroDir); err != nil {
-		log.Printf("failed to remove %s", distroDir)
+	if !*skipNonWindowsDistro {
+		distroDir := filepath.Join(deploy, packageName())
+		copyGaugeBinaries(distroDir)
+		createZipFromUtil(deploy, packageName(), packageName())
+		if err := os.RemoveAll(distroDir); err != nil {
+			log.Printf("failed to remove %s", distroDir)
+		}
 	}
 }
 
@@ -321,7 +326,7 @@ func packageName() string {
 	return fmt.Sprintf("%s-%s-%s.%s", gauge, getBuildVersion(), getGOOS(), getPackageArchSuffix())
 }
 
-func removeUnwatedFiles(dir, currentOS string) error {
+func removeUnwantedFiles(dir, currentOS string) error {
 	fileList := []string{
 		".DS_STORE",
 		".localized",
@@ -355,7 +360,7 @@ func createZipFromUtil(dir, zipDir, pkgName string) {
 
 	windowsZipScript := filepath.Join(wd, "build", "create_windows_zipfile.ps1")
 
-	err = removeUnwatedFiles(filepath.Join(dir, zipDir), currentOS)
+	err = removeUnwantedFiles(filepath.Join(dir, zipDir), currentOS)
 
 	if err != nil {
 		panic(fmt.Sprintf("Failed to cleanup unwanted file(s): %s", err))
