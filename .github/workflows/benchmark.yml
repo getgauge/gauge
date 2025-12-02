@@ -21,7 +21,7 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - uses: actions/checkout@v5
+      - uses: actions/checkout@v6
         with:
           path: gauge
       - name: Set up Go
@@ -47,7 +47,7 @@ jobs:
         run: gauge install java
 
       - name: Prep benchmark
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
@@ -78,7 +78,7 @@ jobs:
 
     steps:
       - name: Prep benchmark
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
