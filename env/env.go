@@ -46,6 +46,7 @@ const (
 	allowMultilineStep             = "allow_multiline_step"
 	allowFilteredParallelExecution = "allow_filtered_parallel_execution"
 	enableMultithreading           = "enable_multithreading"
+	scenarioInitStrategy           = "scenario_init_strategy"
 	// GaugeScreenshotsDir holds the location of screenshots dir
 	GaugeScreenshotsDir     = "gauge_screenshots_dir"
 	gaugeSpecFileExtensions = "gauge_spec_file_extensions"
@@ -117,6 +118,7 @@ func loadDefaultEnvVars() {
 	addEnvVar(CsvDelimiter, ",")
 	addEnvVar(allowMultilineStep, "false")
 	addEnvVar(allowFilteredParallelExecution, "false")
+	addEnvVar(scenarioInitStrategy, "eager")
 	defaultScreenshotDir := filepath.Join(config.ProjectRoot, common.DotGauge, "screenshots")
 	addEnvVar(GaugeScreenshotsDir, defaultScreenshotDir)
 	addEnvVar(gaugeSpecFileExtensions, ".spec, .md")
@@ -319,6 +321,19 @@ var SaveExecutionResult = func() bool {
 // for each parallel stream
 var EnableMultiThreadedExecution = func() bool {
 	return convertToBool(enableMultithreading, false)
+}
+
+// ScenarioInitStrategy returns the scenario initialization strategy (eager or lazy)
+var ScenarioInitStrategy = func() string {
+	s := os.Getenv(scenarioInitStrategy)
+	if s == "" {
+		return "eager"
+	}
+	if s != "eager" && s != "lazy" {
+		logger.Warningf(true, "Invalid value for %s: %s. Using default 'eager'", scenarioInitStrategy, s)
+		return "eager"
+	}
+	return s
 }
 
 var GaugeSpecFileExtensions = func() []string {
