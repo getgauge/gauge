@@ -78,15 +78,23 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 		scenarioFailed := false
 		for _, eachRow := range scenarioResults {
 			protoScenario := eachRow[scenarioIndex].Item().(*gauge_messages.ProtoScenario)
+			result := eachRow[scenarioIndex].(*ScenarioResult)
 			specResult.AddExecTime(protoScenario.GetExecutionTime())
 			if protoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_FAILED {
 				scenarioFailed = true
 				specResult.FailedDataTableRows = append(specResult.FailedDataTableRows, int32(index))
 			}
 			protoTableDrivenScenario := &gauge_messages.ProtoTableDrivenScenario{
-				Scenario:         protoScenario,
-				TableRowIndex:    int32(index),
-				ScenarioTableRow: eachRow[scenarioIndex].(*ScenarioResult).ScenarioDataTableRow,
+				Scenario:          protoScenario,
+				TableRowIndex:     int32(index),
+				ScenarioTableRow:  eachRow[scenarioIndex].(*ScenarioResult).ScenarioDataTableRow,
+				IsSpecTableDriven: true,
+			}
+
+			if result.GetTableDrivenScenario() { // If nested table driven scenario within table driven spec
+				protoTableDrivenScenario.IsScenarioTableDriven = true
+				protoTableDrivenScenario.ScenarioTableRowIndex = int32(result.ScenarioDataTableRowIndex)
+				protoTableDrivenScenario.ScenarioDataTable = result.ScenarioDataTable
 			}
 			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario} // nolint
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)

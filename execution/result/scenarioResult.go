@@ -39,6 +39,10 @@ func (s ScenarioResult) GetSkippedScenario() bool {
 	return s.ProtoScenario.GetExecutionStatus() == gauge_messages.ExecutionStatus_SKIPPED
 }
 
+func (s ScenarioResult) GetTableDrivenScenario() bool {
+	return s.ScenarioDataTable != nil && len(s.ScenarioDataTable.Rows) > 0;
+}
+
 func (s ScenarioResult) AddItems(protoItems []*gauge_messages.ProtoItem) {
 	s.ProtoScenario.ScenarioItems = append(s.ProtoScenario.ScenarioItems, protoItems...)
 }
