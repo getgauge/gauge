@@ -19,6 +19,6 @@ rich==14.2.0
 setuptools==80.9.0
 six==1.17.0
 twine==6.2.0
-urllib3==2.5.0
+urllib3==2.6.0
 webencodings==0.5.1
 zipp==3.23.0
