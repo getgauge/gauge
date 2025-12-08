@@ -43,6 +43,7 @@ type Specification struct {
 	Tags          *Tags
 	Items         []Item
 	TearDownSteps []*Step
+	LazyScenarios []*LazyScenarioCollection
 }
 
 type Item interface {
