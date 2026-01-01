@@ -63,7 +63,7 @@ jobs:
           ./run.sh
 
       - name: Upload benchmark
-        uses: actions/upload-artifact@v5
+        uses: actions/upload-artifact@v6
         with:
           name: ${{matrix.project}}_${{matrix.parallel}}
           path: gauge-benchmarks/out
@@ -86,7 +86,7 @@ jobs:
           ref: master
 
       - name: Download benchmark results
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v7
         with:
           path: gauge-benchmarks/out/
 
