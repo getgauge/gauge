@@ -3,10 +3,11 @@
   "description": "npm wrapper for installing gauge command line",
   "scripts": {
     "install": "node ./src/index.js",
-    "test": "mocha"
+    "test": "mocha",
+    "prepack": "git restore bin/gauge"
   },
   "bin": {
-    "gauge": "./bin/gauge"
+    "gauge": "bin/gauge"
   },
   "repository": {
     "type": "git",
