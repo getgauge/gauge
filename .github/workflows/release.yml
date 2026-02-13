@@ -203,7 +203,8 @@ jobs:
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
 
       - name: Deploy npm
-        run: |
+        run: | # See https://github.com/actions/setup-node/issues/1440
+          unset NODE_AUTH_TOKEN
           cd build/npm
           npm version $GAUGE_VERSION
           npm publish --access=public
