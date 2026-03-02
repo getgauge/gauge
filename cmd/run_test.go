@@ -7,11 +7,11 @@
 package cmd
 
 import (
-	"bytes"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"github.com/getgauge/gauge/gauge"
@@ -166,13 +166,13 @@ func TestHandleConflictingParamsWithOtherArguments(t *testing.T) {
 		}
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0. Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0. Stdout:\n%s", err, stdout.String())
 	}
 }
 
@@ -256,13 +256,13 @@ func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 		}
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0. Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0. Stdout:\n%s", err, stdout.String())
 	}
 }
 
@@ -347,13 +347,13 @@ func TestNoExitCodeShouldForceReturnZero(t *testing.T) {
 		}
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("%s process ran with err %v, want exit status 0. Stdout:\n%s", os.Args, err, stdout.Bytes())
+		t.Fatalf("%s process ran with err %v, want exit status 0. Stdout:\n%s", os.Args, err, stdout.String())
 	}
 }
 
@@ -390,7 +390,7 @@ func TestFailureShouldReturnExitCode(t *testing.T) {
 		}
 	}
 
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
@@ -398,7 +398,7 @@ func TestFailureShouldReturnExitCode(t *testing.T) {
 	if e, ok := err.(*exec.ExitError); ok && !e.Success() {
 		return
 	}
-	t.Fatalf("process ran with err %v, want exit status 1. Stdout:\n%s", err, stdout.Bytes())
+	t.Fatalf("process ran with err %v, want exit status 1. Stdout:\n%s", err, stdout.String())
 }
 
 func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
@@ -437,13 +437,13 @@ func TestLogLevelCanBeOverriddenForFailed(t *testing.T) {
 		executeFailed(runCmd)
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.String())
 	}
 }
 
@@ -475,13 +475,13 @@ func TestLogLevelCanBeOverriddenForRepeat(t *testing.T) {
 		repeatLastExecution(runCmd)
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()), "-test.v")
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.String())
 	}
 }
 
@@ -518,13 +518,13 @@ func TestCorrectFlagsAreSetForRepeat(t *testing.T) {
 		repeatLastExecution(runCmd)
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()))
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.String())
 	}
 }
 
@@ -551,13 +551,13 @@ func TestCorrectFlagsAreSetForFailed(t *testing.T) {
 		executeFailed(runCmd)
 		return
 	}
-	var stdout bytes.Buffer
+	var stdout strings.Builder
 	cmd := exec.Command(os.Args[0], fmt.Sprintf("-test.run=%s", t.Name()), "-test.v")
 	cmd.Env = subEnv()
 	cmd.Stdout = &stdout
 	err := cmd.Run()
 	if err != nil {
-		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.Bytes())
+		t.Fatalf("process ran with err %v, want exit status 0.Stdout:\n%s", err, stdout.String())
 	}
 }
 

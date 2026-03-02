@@ -7,8 +7,6 @@
 package formatter
 
 import (
-	"bytes"
-
 	"strings"
 
 	"github.com/getgauge/gauge/config"
@@ -16,7 +14,7 @@ import (
 )
 
 type formatter struct {
-	buffer    bytes.Buffer
+	buffer    strings.Builder
 	itemQueue *gauge.ItemQueue
 }
 

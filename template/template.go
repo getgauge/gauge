@@ -30,7 +30,7 @@ func (t *templates) String() (string, error) {
 	var buffer strings.Builder
 	for _, k := range t.names {
 		v := t.t[k]
-		_, err := buffer.WriteString(fmt.Sprintf("\n# %s\n%s = %s\n", v.Description, v.Key, v.Value))
+		_, err := fmt.Fprintf(&buffer, "\n# %s\n%s = %s\n", v.Description, v.Key, v.Value)
 		if err != nil {
 			return "", err
 		}

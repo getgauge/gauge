@@ -7,7 +7,6 @@
 package main
 
 import (
-	"bytes"
 	"flag"
 	"fmt"
 	"log"
@@ -194,7 +193,7 @@ func revParseHead() string {
 		return ""
 	}
 	cmd := exec.Command("git", "rev-parse", "--short", "HEAD")
-	var hash bytes.Buffer
+	var hash strings.Builder
 	cmd.Stdout = &hash
 	err := cmd.Run()
 	if err != nil {

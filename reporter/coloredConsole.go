@@ -7,7 +7,6 @@
 package reporter
 
 import (
-	"bytes"
 	"fmt"
 	"io"
 	"strings"
@@ -23,7 +22,7 @@ import (
 type coloredConsole struct {
 	writer         *goterminal.Writer
 	indentation    int
-	sceFailuresBuf bytes.Buffer
+	sceFailuresBuf strings.Builder
 }
 
 func newColoredConsole(out io.Writer) *coloredConsole {

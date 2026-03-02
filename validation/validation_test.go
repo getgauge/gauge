@@ -8,6 +8,7 @@ package validation
 
 import (
 	"net"
+	"strings"
 	"testing"
 
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
@@ -16,8 +17,6 @@ import (
 	"github.com/getgauge/gauge/runner"
 
 	"errors"
-
-	"bytes"
 
 	. "gopkg.in/check.v1"
 )
@@ -125,7 +124,7 @@ Scenario 2
 
 func (s *MySuite) TestValidateStep(c *C) {
 	HideSuggestion = false
-	var suggestion bytes.Buffer
+	var suggestion strings.Builder
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3}
 	runner := &mockRunner{
 		ExecuteMessageFunc: func(m *gauge_messages.Message) (*gauge_messages.Message, error) {
@@ -165,7 +164,7 @@ func (s *MySuite) TestShouldNotGiveSuggestionWhenHideSuggestionFlagIsFalse(c *C)
 
 func (s *MySuite) TestValidateStepInConcept(c *C) {
 	HideSuggestion = false
-	var suggestion bytes.Buffer
+	var suggestion strings.Builder
 	parentStep := &gauge.Step{Value: "my concept", LineNo: 2, IsConcept: true, LineText: "my concept"}
 	myStep := &gauge.Step{Value: "my step", LineText: "my step", IsConcept: false, LineNo: 3, Parent: parentStep}
 	cptDict := gauge.NewConceptDictionary()
