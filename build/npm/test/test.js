@@ -18,12 +18,24 @@ describe("getVersion", () => {
 
 describe("getBinaryUrl", () => {
     it("should return platform specific URL", async () => {
-        let originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');;
-        let originalArch = Object.getOwnPropertyDescriptor(process, 'arch');;
+        let originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+        let originalArch = Object.getOwnPropertyDescriptor(process, 'arch');
         Object.defineProperty(process, 'platform', { value: "win32" });
         Object.defineProperty(process, 'arch', { value: "ia32" });
 
         expect(await subject.getBinaryUrl("1.0.0")).equals("https://github.com/getgauge/gauge/releases/download/v1.0.0/gauge-1.0.0-windows.x86.zip");
+
+        Object.defineProperty(process, 'platform', originalPlatform);
+        Object.defineProperty(process, 'arch', originalArch);
+    });
+
+    it("should override platform specific URL for windows arm64", async () => {
+        let originalPlatform = Object.getOwnPropertyDescriptor(process, 'platform');
+        let originalArch = Object.getOwnPropertyDescriptor(process, 'arch');
+        Object.defineProperty(process, 'platform', { value: "win32" });
+        Object.defineProperty(process, 'arch', { value: "arm64" });
+
+        expect(await subject.getBinaryUrl("1.0.0")).equals("https://github.com/getgauge/gauge/releases/download/v1.0.0/gauge-1.0.0-windows.x86_64.zip");
 
         Object.defineProperty(process, 'platform', originalPlatform);
         Object.defineProperty(process, 'arch', originalArch);
