@@ -15,14 +15,14 @@ const BASE_URL="https://github.com/getgauge/gauge/releases/download/",
         "linux": "linux",
         "win32": "windows"
     };
- 
-var getVersion = function(p) {
-    return new Promise( (resolve, reject) => {
+
+const getVersion = function (p) {
+    return new Promise((resolve, reject) => {
         if (!fs.existsSync(p)) {
             reject("Unable to find package.json.");
         }
         fs.readFile(p, (err, data) => {
-            if(err) {
+            if (err) {
                 reject(err);
             }
             const pkg = JSON.parse(data);
@@ -31,15 +31,16 @@ var getVersion = function(p) {
             } else {
                 reject(new Error("Unable to find version in package.json."));
             }
-        })    
+        })
     });
-}
+};
 
-var getBinaryUrl = function(version) {
-    let os = PLATFORM_MAPPING[process.platform];
-    let arch = ARCH_MAPPING[process.arch];
-    return `${BASE_URL}v${version}/gauge-${version}-${os}.${arch}.zip`;
-}
+const getBinaryUrl = function (version) {
+    // Use x64 on Windows for ARM64 as we don't publish ARM64 builds yet
+    const canonical_os = PLATFORM_MAPPING[process.platform];
+    const canonical_arch = ARCH_MAPPING[canonical_os === 'windows' && process.arch === 'arm64' ? 'x64' : process.arch];
+    return `${BASE_URL}v${version}/gauge-${version}-${canonical_os}.${canonical_arch}.zip`;
+};
 
 module.exports = {
     getVersion: getVersion,
