@@ -60,7 +60,7 @@ func (p *properties) Format(f Formatter) (string, error) {
 
 func (p *properties) String() (string, error) {
 	var buffer strings.Builder
-	_, err := buffer.WriteString(fmt.Sprintf("# Version %s\n# %s\n", version.FullVersion(), comment))
+	_, err := fmt.Fprintf(&buffer, "# Version %s\n# %s\n", version.FullVersion(), comment)
 	if err != nil {
 		return "", err
 	}
@@ -71,7 +71,7 @@ func (p *properties) String() (string, error) {
 	sort.Strings(keys)
 	for _, k := range keys {
 		v := p.p[k]
-		_, err := buffer.WriteString(fmt.Sprintf("\n# %s\n%s = %s\n", v.Description, v.Key, v.Value))
+		_, err := fmt.Fprintf(&buffer, "\n# %s\n%s = %s\n", v.Description, v.Key, v.Value)
 		if err != nil {
 			return "", err
 		}

@@ -7,7 +7,6 @@
 package parser
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 
@@ -63,7 +62,7 @@ func processTag(parser *SpecParser, token *Token) ([]error, bool) {
 }
 
 func processTable(parser *SpecParser, token *Token) ([]error, bool) {
-	var buffer bytes.Buffer
+	var buffer strings.Builder
 	shouldEscape := false
 	var errs []error
 	for i, element := range token.Value {

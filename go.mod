@@ -1,13 +1,13 @@
 module github.com/getgauge/gauge
 
-go 1.25
+go 1.26
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.9.0
 	github.com/getgauge/common v0.0.0-20251201180245-fc645fb6d342
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20260201043428-7f087d51f50b
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20260301053907-20751c339073
 	github.com/golang/protobuf v1.5.4
 	github.com/magiconair/properties v1.8.10
 	github.com/natefinch/lumberjack v2.0.0+incompatible
@@ -18,7 +18,7 @@ require (
 	github.com/sourcegraph/jsonrpc2 v0.2.1
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260209200024-4cfbd4190f57
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20260226221140-a57be14db171
 	google.golang.org/grpc v1.79.1
 	google.golang.org/protobuf v1.36.11
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
@@ -34,7 +34,7 @@ require (
 	github.com/mattn/go-isatty v0.0.20 // indirect
 	github.com/rogpeppe/go-internal v1.14.1 // indirect
 	go.yaml.in/yaml/v3 v3.0.4 // indirect
-	golang.org/x/net v0.50.0 // indirect
+	golang.org/x/net v0.51.0 // indirect
 	golang.org/x/sys v0.41.0 // indirect
 	golang.org/x/text v0.34.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
