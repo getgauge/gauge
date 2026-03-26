@@ -43,7 +43,9 @@ const (
 	onlyDefault            = ""
 	groupDefault           = -1
 	maxRetriesCountDefault = 1
+	maxStepRetriesDefault  = 1
 	retryOnlyTagsDefault   = ""
+	retryStepOnDefault     = ""
 	failSafeDefault        = false
 	skipCommandSaveDefault = false
 
@@ -61,7 +63,9 @@ const (
 	strategyName        = "strategy"
 	groupName           = "group"
 	maxRetriesCountName = "max-retries-count"
+	maxStepRetriesName  = "max-step-retries-count"
 	retryOnlyTagsName   = "retry-only"
+	retryStepOnName     = "retry-step-on"
 	streamsName         = "n"
 	onlyName            = "only"
 	failSafeName        = "fail-safe"
@@ -113,7 +117,9 @@ var (
 	strategy                   string
 	streams                    int
 	maxRetriesCount            int
+	maxStepRetriesCount        int
 	retryOnlyTags              string
+	retryStepOn                string
 	group                      int
 	failSafe                   bool
 	skipCommandSave            bool
@@ -132,7 +138,9 @@ func init() {
 	f.BoolVarP(&parallel, parallelName, "p", parallelDefault, "Execute specs in parallel")
 	f.IntVarP(&streams, streamsName, "n", streamsDefault, "Specify number of parallel execution streams")
 	f.IntVarP(&maxRetriesCount, maxRetriesCountName, "c", maxRetriesCountDefault, "Max count of iterations for failed scenario")
+	f.IntVarP(&maxStepRetriesCount, maxStepRetriesName, "", maxStepRetriesDefault, "Max count of iterations for failed step")
 	f.StringVarP(&retryOnlyTags, retryOnlyTagsName, "", retryOnlyTagsDefault, "Retries the specs and scenarios tagged with given tags")
+	f.StringVarP(&retryStepOn, retryStepOnName, "", retryStepOnDefault, "Retries failed step only when error message or stacktrace matches this regex")
 	f.StringVarP(&tagsToFilterForParallelRun, onlyName, "o", onlyDefault, "Execute only the specs and scenarios tagged with given tags in parallel, rest will be run in serial. Applicable only if run in parallel.")
 	err := f.MarkHidden(onlyName)
 	if err != nil {
@@ -293,6 +301,9 @@ func handleConflictingParams(setFlags *pflag.FlagSet, args []string) error {
 	}
 	if maxRetriesCount == 1 && retryOnlyTags != "" {
 		return errors.New("Invalid Command. flag --retry-only can be used only with --max-retry-count")
+	}
+	if maxStepRetriesCount == 1 && retryStepOn != "" {
+		return errors.New("Invalid Command. flag --retry-step-on can be used only with --max-step-retries-count")
 	}
 	return nil
 }
