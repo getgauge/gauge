@@ -14,7 +14,7 @@ nh3==0.3.4
 packaging==26.0
 Pygments==2.20.0
 readme-renderer==44.0
-requests==2.33.0
+requests==2.33.1
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==14.3.3
