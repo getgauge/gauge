@@ -203,11 +203,10 @@ jobs:
           git config --global user.email "$(git --no-pager log --format=format:'%ae' -n 1)"
 
       - name: Deploy npm
-        run: | # See https://github.com/actions/setup-node/issues/1440
-          unset NODE_AUTH_TOKEN
+        run: |
           cd build/npm
           npm version $GAUGE_VERSION
-          npm publish --access=public
+          npm publish --access=public --loglevel=silly
 
   choco-release:
     runs-on: windows-latest
