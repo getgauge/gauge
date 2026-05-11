@@ -20,4 +20,4 @@ rfc3986==2.0.0
 rich==15.0.0
 setuptools==82.0.1
 twine==6.2.0
-urllib3==2.6.3
+urllib3==2.7.0
