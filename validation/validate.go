@@ -54,6 +54,7 @@ type SpecValidator struct {
 type StepValidationError struct {
 	step       *gauge.Step
 	message    string
+	detail     string
 	fileName   string
 	errorType  *gm.StepValidateResponse_ErrorType
 	suggestion string
@@ -65,7 +66,14 @@ type SpecValidationError struct {
 }
 
 func (s StepValidationError) Message() string {
+	if s.detail != "" {
+		return s.message + "\n" + s.detail
+	}
 	return s.message
+}
+
+func (s StepValidationError) Detail() string {
+	return s.detail
 }
 
 func (s StepValidationError) Step() *gauge.Step {
@@ -102,6 +110,10 @@ func NewSpecValidationError(m string, f string) SpecValidationError {
 // NewStepValidationError generates new step validation error with error message, filename and error type.
 func NewStepValidationError(s *gauge.Step, m string, f string, e *gm.StepValidateResponse_ErrorType, suggestion string) StepValidationError {
 	return StepValidationError{step: s, message: m, fileName: f, errorType: e, suggestion: suggestion}
+}
+
+func NewStepValidationErrorWithDetail(s *gauge.Step, m string, detail string, f string, e *gm.StepValidateResponse_ErrorType, suggestion string) StepValidationError {
+	return StepValidationError{step: s, message: m, detail: detail, fileName: f, errorType: e, suggestion: suggestion}
 }
 
 // Validate validates specs and if it has any errors, it exits.
@@ -321,11 +333,11 @@ func (v *SpecValidator) Step(s *gauge.Step) {
 		valErr := val.(StepValidationError)
 		if s.Parent == nil {
 			v.validationErrors = append(v.validationErrors,
-				NewStepValidationError(s, valErr.message, v.specification.FileName, valErr.errorType, valErr.suggestion))
+				NewStepValidationErrorWithDetail(s, valErr.message, valErr.detail, v.specification.FileName, valErr.errorType, valErr.suggestion))
 		} else {
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
 			v.validationErrors = append(v.validationErrors,
-				NewStepValidationError(s, valErr.message, cpt.FileName, valErr.errorType, valErr.suggestion))
+				NewStepValidationErrorWithDetail(s, valErr.message, valErr.detail, cpt.FileName, valErr.errorType, valErr.suggestion))
 		}
 	}
 }
@@ -350,13 +362,14 @@ func (v *SpecValidator) validateStep(s *gauge.Step) error {
 		res := r.GetStepValidateResponse()
 		if !res.GetIsValid() {
 			msg := getMessage(res.GetErrorType().String())
+			detail := res.GetErrorMessage()
 			suggestion := res.GetSuggestion()
 			if s.Parent == nil {
-				vErr := NewStepValidationError(s, msg, v.specification.FileName, &res.ErrorType, suggestion)
+				vErr := NewStepValidationErrorWithDetail(s, msg, detail, v.specification.FileName, &res.ErrorType, suggestion)
 				return vErr
 			}
 			cpt := v.conceptsDictionary.Search(s.Parent.Value)
-			vErr := NewStepValidationError(s, msg, cpt.FileName, &res.ErrorType, suggestion)
+			vErr := NewStepValidationErrorWithDetail(s, msg, detail, cpt.FileName, &res.ErrorType, suggestion)
 			return vErr
 
 		}
