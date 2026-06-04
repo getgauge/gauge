@@ -96,6 +96,9 @@ func runRunnerCommand(manifest *manifest.Manifest, port string, debug bool, writ
 		return nil, nil, fmt.Errorf("Compatibility error. %s", compatibilityErr.Error())
 	}
 	command := getOsSpecificCommand(&r)
+	if len(command) > 0 && !filepath.IsAbs(command[0]) {
+		command[0] = filepath.Join(runnerDir, command[0])
+	}
 	env := getCleanEnv(port, os.Environ(), debug, getPluginPaths())
 	cmd, err := common.ExecuteCommandWithEnv(command, runnerDir, writer.Stdout, writer.Stderr, env)
 	return cmd, &r, err
