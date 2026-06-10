@@ -97,6 +97,7 @@ func defaults() *properties {
 		runnerRequestTimeout:    NewProperty(runnerRequestTimeout, "30000", "Timeout in milliseconds for requests from the language runner."),
 		ideRequestTimeout:       NewProperty(ideRequestTimeout, "30000", "Timeout in milliseconds for requests from runner when invoked for ide."),
 		checkUpdates:            NewProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
+		logMaxBackups:           NewProperty(logMaxBackups, "3", "The maximum number of backup log files to retain."),
 	}}
 }
 

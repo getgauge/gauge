@@ -20,6 +20,7 @@ func TestJSONFormatter(t *testing.T) {
 		"check_updates                 	true                               ",
 		"gauge_repository_url          	https://downloads.gauge.org/plugin ",
 		"ide_request_timeout           	30000                              ",
+		"log_max_backups               	3                                  ",
 		"plugin_connection_timeout     	10000                              ",
 		"plugin_kill_timeout           	4000                               ",
 		"runner_connection_timeout     	30000                              ",

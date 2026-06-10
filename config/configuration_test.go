@@ -27,6 +27,14 @@ func stub4GetFromConfig(propertyName string) string {
 	return "true	"
 }
 
+func stubLogMaxBackupsDefault(propertyName string) string {
+    return ""
+}
+
+func stubLogMaxBackupsCustom(propertyName string) string {
+    return "10"
+}
+
 func TestRunnerRequestTimeout(t *testing.T) {
 	getFromConfig = stubGetFromConfig
 	expected := defaultRunnerRequestTimeout
@@ -69,5 +77,19 @@ func TestAllowUpdates(t *testing.T) {
 	getFromConfig = stub4GetFromConfig
 	if !CheckUpdates() {
 		t.Error("Expected CheckUpdates=true, got false")
+	}
+}
+
+func TestLogMaxBackups(t *testing.T) {
+	getFromConfig = stubLogMaxBackupsDefault
+	got := LogMaxBackupsCount()
+	if got != 3 {
+		t.Errorf("expected default MaxBackups to be 3, got %d", got)
+	}
+
+	getFromConfig = stubLogMaxBackupsCustom
+	got = LogMaxBackupsCount()
+	if got != 10 {
+		t.Errorf("expected MaxBackups to be 10, got %d", got)
 	}
 }

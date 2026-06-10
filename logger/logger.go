@@ -198,7 +198,7 @@ var createFileLogger = func(name string, size int) logging.Backend {
 	return logging.NewLogBackend(&lumberjack.Logger{
 		Filename:   name,
 		MaxSize:    size, // megabytes
-		MaxBackups: 3,
+		MaxBackups: config.LogMaxBackupsCount(),
 		MaxAge:     28, //days
 	}, "", 0)
 }

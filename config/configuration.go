@@ -25,6 +25,7 @@ const (
 	ideRequestTimeout       = "ide_request_timeout"
 	checkUpdates            = "check_updates"
 	allowInsecureDownload   = "allow_insecure_download"
+	logMaxBackups           = "log_max_backups"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -32,6 +33,7 @@ const (
 	defaultRefactorTimeout         = time.Second * 10
 	defaultRunnerRequestTimeout    = time.Second * 30
 	defaultIdeRequestTimeout       = time.Second * 30
+	defaultLogMaxBackups           = 3
 	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
@@ -91,6 +93,11 @@ func AllowInsecureDownload() bool {
 	return convertToBool(allow, allowInsecureDownload, false)
 }
 
+func LogMaxBackupsCount() int {
+	log_max_backups := getFromConfig(logMaxBackups)
+	return convertToInt(log_max_backups, logMaxBackups, defaultLogMaxBackups)
+}
+
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
 func GaugeRepositoryUrl() string {
 	return getFromConfig(gaugeRepositoryURL)
@@ -133,6 +140,15 @@ func convertToBool(value, property string, defaultValue bool) bool {
 		return defaultValue
 	}
 	return boolValue
+}
+
+func convertToInt(value, property string, defaultValue int) int {
+	intValue, err := strconv.Atoi(strings.TrimSpace(value))
+	if err != nil {
+		APILog.Warningf("Incorrect value for %s in property file. Cannot convert %s to integer.", property, value)
+		return defaultValue
+	}
+	return intValue
 }
 
 var getFromConfig = func(propertyName string) string {
