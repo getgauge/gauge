@@ -108,13 +108,9 @@ SectionGroupEnd
 !insertmacro MUI_FUNCTION_DESCRIPTION_END
 
 function .onInit
+  SetRegView 64
   ${If} $INSTDIR == ""
-    ${If} ${RunningX64}
-      SetRegView 64
-      StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
-    ${Else}
-      StrCpy $INSTDIR "$PROGRAMFILES\Gauge"
-    ${EndIf}
+    StrCpy $INSTDIR "$PROGRAMFILES64\Gauge"
   ${EndIf}
 functionEnd
 
