@@ -27,11 +27,11 @@ func stub4GetFromConfig(propertyName string) string {
 	return "true	"
 }
 
-func stubLogMaxBackupsDefault(propertyName string) string {
+func stubLogMaxBackupsCountDefault(propertyName string) string {
     return ""
 }
 
-func stubLogMaxBackupsCustom(propertyName string) string {
+func stubLogMaxBackupsCountCustom(propertyName string) string {
     return "10"
 }
 
@@ -81,15 +81,15 @@ func TestAllowUpdates(t *testing.T) {
 }
 
 func TestLogMaxBackups(t *testing.T) {
-	getFromConfig = stubLogMaxBackupsDefault
+	getFromConfig = stubLogMaxBackupsCountDefault
 	got := LogMaxBackupsCount()
 	if got != 3 {
-		t.Errorf("expected default MaxBackups to be 3, got %d", got)
+		t.Errorf("expected default LogMaxBackupsCount to be 3, got %d", got)
 	}
 
-	getFromConfig = stubLogMaxBackupsCustom
+	getFromConfig = stubLogMaxBackupsCountCustom
 	got = LogMaxBackupsCount()
 	if got != 10 {
-		t.Errorf("expected MaxBackups to be 10, got %d", got)
+		t.Errorf("expected LogMaxBackupsCount to be 10, got %d", got)
 	}
 }

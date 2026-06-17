@@ -25,7 +25,7 @@ const (
 	ideRequestTimeout       = "ide_request_timeout"
 	checkUpdates            = "check_updates"
 	allowInsecureDownload   = "allow_insecure_download"
-	logMaxBackups           = "log_max_backups"
+	logMaxBackupsCount      = "log_max_backups_count"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -33,7 +33,7 @@ const (
 	defaultRefactorTimeout         = time.Second * 10
 	defaultRunnerRequestTimeout    = time.Second * 30
 	defaultIdeRequestTimeout       = time.Second * 30
-	defaultLogMaxBackups           = 3
+	defaultLogMaxBackupsCount      = 3
 	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
@@ -94,8 +94,8 @@ func AllowInsecureDownload() bool {
 }
 
 func LogMaxBackupsCount() int {
-	log_max_backups := getFromConfig(logMaxBackups)
-	return convertToInt(log_max_backups, logMaxBackups, defaultLogMaxBackups)
+	log_max_backups_count := getFromConfig(logMaxBackupsCount)
+	return convertToInt(log_max_backups_count, logMaxBackupsCount, defaultLogMaxBackupsCount)
 }
 
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
