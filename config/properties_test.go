@@ -116,6 +116,9 @@ gauge_repository_url = https://downloads.gauge.org/plugin
 # Timeout in milliseconds for requests from runner when invoked for ide.
 ide_request_timeout = 30000
 
+# The maximum number of backup log files to retain.
+log_max_backups_count = 3
+
 # Timeout in milliseconds for making a connection to plugins.
 plugin_connection_timeout = 10000
 
