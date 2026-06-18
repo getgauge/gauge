@@ -56,3 +56,4 @@ build/pip/setup.py
 .eggs
 
 coverage.out
+*.log

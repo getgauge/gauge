@@ -93,8 +93,13 @@ func AllowInsecureDownload() bool {
 	return convertToBool(allow, allowInsecureDownload, false)
 }
 
+// The maximum number of backup log files to retain.
 func LogMaxBackupsCount() int {
 	log_max_backups_count := getFromConfig(logMaxBackupsCount)
+	if strings.TrimSpace(log_max_backups_count) == "" {
+		// Handle legacy projects without this config property
+		return defaultLogMaxBackupsCount
+	}
 	return convertToInt(log_max_backups_count, logMaxBackupsCount, defaultLogMaxBackupsCount)
 }
 
