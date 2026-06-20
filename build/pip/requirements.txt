@@ -1,3 +1,24 @@
+# =============================================================================
+# Direct dependencies
+# These are imported in the code or invoked by the build/test/release scripts.
+# Edit these by hand.
+# =============================================================================
+
+# Runtime (mirrors install_requires in setup.tmpl)
+requests==2.34.2
+
+# Build / codegen
+setuptools==82.0.1
+
+# Publish
+twine==6.2.0
+
+# =============================================================================
+# Locked transitive dependencies
+# Pulled in by the direct deps above; not imported directly. Pinned here for
+# reproducible installs. Do not edit by hand -- regenerate periodically after
+# changing a direct dep
+# =============================================================================
 certifi==2026.5.20
 charset-normalizer==3.4.7
 docutils==0.23
@@ -13,11 +34,8 @@ more-itertools==11.1.0
 nh3==0.3.5
 packaging==26.2
 Pygments==2.20.0
-readme-renderer==44.0
-requests==2.34.2
+readme-renderer==45.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==15.0.0
-setuptools==82.0.1
-twine==6.2.0
 urllib3==2.7.0
