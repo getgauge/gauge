@@ -39,6 +39,7 @@ import (
 
 	"encoding/json"
 	"path/filepath"
+	"regexp"
 
 	"github.com/getgauge/common"
 	"github.com/getgauge/gauge/config"
@@ -58,10 +59,16 @@ const (
 )
 
 // Count of iterations
-var MaxRetriesCount int
+var MaxRetriesCount = 1
 
 // Tags to filter specs/scenarios to retry
 var RetryOnlyTags string
+
+// Count of iterations for failed steps
+var MaxStepRetriesCount = 1
+
+// Regex used to determine if failed step should be retried.
+var RetryStepOn string
 
 // NumberOfExecutionStreams shows the number of execution streams, in parallel execution.
 var NumberOfExecutionStreams int
@@ -211,6 +218,14 @@ func printExecutionResult(suiteResult *result.SuiteResult, isParsingOk bool) int
 func validateFlags() error {
 	if MaxRetriesCount < 1 {
 		return fmt.Errorf("invalid input(%s) to --max-retries-count flag", strconv.Itoa(MaxRetriesCount))
+	}
+	if MaxStepRetriesCount < 1 {
+		return fmt.Errorf("invalid input(%s) to --max-step-retries-count flag", strconv.Itoa(MaxStepRetriesCount))
+	}
+	if RetryStepOn != "" {
+		if _, err := regexp.Compile(RetryStepOn); err != nil {
+			return fmt.Errorf("invalid input(%s) to --retry-step-on flag", RetryStepOn)
+		}
 	}
 	if !InParallel {
 		return nil
