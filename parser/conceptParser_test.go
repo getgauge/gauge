@@ -463,6 +463,56 @@ func (s *MySuite) TestParsingConceptStepWithInlineTable(c *C) {
 	c.Assert(nameCells[1].CellType, Equals, gauge.Static)
 }
 
+func (s *MySuite) TestParsingConceptWithConsecutiveInlineTablesWithoutBlankLine(c *C) {
+	parser := new(ConceptParser)
+	concepts, parseRes := parser.Parse("# my concept\n"+
+		"* step with table\n"+
+		" |id|name|\n"+
+		" |--|--|\n"+
+		" |1|one|\n"+
+		"* step with table\n"+
+		" |id|name|\n"+
+		" |--|--|\n"+
+		" |2|two|\n", "")
+
+	c.Assert(parseRes.Ok, Equals, true)
+	c.Assert(len(parseRes.ParseErrors), Equals, 0)
+	c.Assert(len(concepts), Equals, 1)
+
+	concept := concepts[0]
+
+	c.Assert(concept.IsConcept, Equals, true)
+	c.Assert(len(concept.ConceptSteps), Equals, 2)
+
+	tableArgument1 := concept.ConceptSteps[0].Args[0]
+	c.Assert(tableArgument1.ArgType, Equals, gauge.TableArg)
+
+	inlineTable1 := tableArgument1.Table
+	c.Assert(inlineTable1.IsInitialized(), Equals, true)
+	idCells1, _ := inlineTable1.Get("id")
+	nameCells1, _ := inlineTable1.Get("name")
+	c.Assert(len(idCells1), Equals, 1)
+	c.Assert(len(nameCells1), Equals, 1)
+	c.Assert(idCells1[0].Value, Equals, "1")
+	c.Assert(idCells1[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells1[0].Value, Equals, "one")
+	c.Assert(nameCells1[0].CellType, Equals, gauge.Static)
+
+	tableArgument2 := concept.ConceptSteps[1].Args[0]
+	c.Assert(tableArgument2.ArgType, Equals, gauge.TableArg)
+
+	inlineTable2 := tableArgument2.Table
+	c.Assert(inlineTable2.IsInitialized(), Equals, true)
+	idCells2, _ := inlineTable2.Get("id")
+	nameCells2, _ := inlineTable2.Get("name")
+	c.Assert(len(idCells2), Equals, 1)
+	c.Assert(len(nameCells2), Equals, 1)
+	c.Assert(idCells2[0].Value, Equals, "2")
+	c.Assert(idCells2[0].CellType, Equals, gauge.Static)
+	c.Assert(nameCells2[0].Value, Equals, "two")
+	c.Assert(nameCells2[0].CellType, Equals, gauge.Static)
+}
+
 func (s *MySuite) TestErrorParsingConceptWithInvalidInlineTable(c *C) {
 	parser := new(ConceptParser)
 	_, parseRes := parser.Parse("# my concept \n |id|name|\n|1|vishnu|\n|2|prateek|\n", "")
