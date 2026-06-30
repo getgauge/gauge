@@ -82,6 +82,7 @@ func (parser *ConceptParser) createConcepts(tokens []*Token, fileName string) ([
 			if errs := parser.processConceptStep(token, fileName); len(errs) > 0 {
 				finalResult.ParseErrors = append(finalResult.ParseErrors, errs...)
 			}
+			retainStates(&parser.currentState, conceptScope)
 			addStates(&parser.currentState, stepScope)
 		} else if parser.isTableHeader(token) {
 			if !isInState(parser.currentState, stepScope) {
