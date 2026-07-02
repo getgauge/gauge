@@ -18,7 +18,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -35,7 +35,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -103,7 +103,7 @@ jobs:
       matrix:
         os: [windows-latest, ubuntu-latest]
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
       - name: Set up Go
         uses: actions/setup-go@v6
         with:
@@ -201,7 +201,7 @@ jobs:
         os: [windows-latest, ubuntu-latest, macos-latest]
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Set up Go
         uses: actions/setup-go@v6
@@ -242,7 +242,7 @@ jobs:
       BENCHMARK_OUT_DIR: "../out"
 
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           path: gauge
       - name: Set up Go
@@ -267,7 +267,7 @@ jobs:
         run: gauge install java
 
       - name: Prep benchmark
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
@@ -297,7 +297,7 @@ jobs:
 
     steps:
       - name: Prep benchmark
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           repository: getgauge/gauge-benchmarks
           path: gauge-benchmarks
