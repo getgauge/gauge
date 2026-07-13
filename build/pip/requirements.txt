@@ -8,7 +8,7 @@
 requests==2.34.2
 
 # Build / codegen
-setuptools==82.0.1
+setuptools==83.0.0
 
 # Publish
 twine==6.2.0
@@ -20,7 +20,7 @@ twine==6.2.0
 # changing a direct dep
 # =============================================================================
 certifi==2026.6.17
-charset-normalizer==3.4.7
+charset-normalizer==3.4.9
 docutils==0.23
 id==1.6.1
 idna==3.18
