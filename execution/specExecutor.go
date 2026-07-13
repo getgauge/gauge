@@ -160,6 +160,7 @@ func (e *specExecutor) executeSpec() error {
 
 func (e *specExecutor) executeScenarioTableDrivenScenarios(scenarios []*gauge.Scenario) {
 	scnMap := make(map[int]bool)
+	failedScnMap := make(map[int]bool)
 	for _, s := range scenarios {
 		if _, ok := scnMap[s.Span.Start]; !ok {
 			scnMap[s.Span.Start] = true
@@ -168,10 +169,14 @@ func (e *specExecutor) executeScenarioTableDrivenScenarios(scenarios []*gauge.Sc
 		if err != nil {
 			logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 		}
+		if r.GetFailed() {
+			failedScnMap[s.Span.Start] = true
+		}
 		e.specResult.AddTableDrivenScenarioResult(r, gauge.ConvertToProtoTable(s.DataTable.Table),
 			s.ScenarioDataTableRowIndex, s.SpecDataTableRowIndex, s.SpecDataTableRow.IsInitialized())
 	}
 	e.specResult.ScenarioCount += len(scnMap)
+	e.specResult.ScenarioFailedCount += len(failedScnMap)
 }
 
 func (e *specExecutor) initSpecDataStore() *gauge_messages.ProtoExecutionResult {

@@ -52,7 +52,9 @@ func (specResult *SpecResult) AddScenarioResults(scenarioResults []Result) {
 func (specResult *SpecResult) AddTableDrivenScenarioResult(r *ScenarioResult, t *gauge_messages.ProtoTable, scenarioRowIndex int, specRowIndex int, specTableDriven bool) {
 	if r.GetFailed() {
 		specResult.IsFailed = true
-		specResult.ScenarioFailedCount++
+		// ScenarioFailedCount is aggregated once per distinct scenario by the
+		// caller (executeScenarioTableDrivenScenarios), not per data-table row,
+		// so that passed = executed - failed stays consistent with ScenarioCount.
 	}
 	specResult.AddExecTime(r.ExecTime())
 	pItem := &gauge_messages.ProtoItem{ // nolint

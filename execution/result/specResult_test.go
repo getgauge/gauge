@@ -69,3 +69,32 @@ func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	c.Assert(specResult.ScenarioFailedCount, gc.Equals, 0)
 	c.Assert(specResult.ExecutionTime, gc.Equals, int64(0))
 }
+
+// A scenario that owns a scenario-level data table runs once per row. The
+// caller (executeScenarioTableDrivenScenarios) is responsible for counting the
+// scenario as failed at most once, so AddTableDrivenScenarioResult must not bump
+// ScenarioFailedCount per row - otherwise passed = executed - failed goes
+// negative and passing scenarios vanish from the summary (issue #1802).
+func (s *MySuite) TestAddTableDrivenScenarioResultDoesNotBumpFailedCountPerRow(c *gc.C) {
+	specResult := SpecResult{
+		ProtoSpec: &gauge_messages.ProtoSpec{Items: []*gauge_messages.ProtoItem{}},
+	}
+	heading := "Scenario heading"
+	table := &gauge_messages.ProtoTable{}
+
+	// Two failing rows of the same scenario-data-table scenario.
+	for rowIndex := 0; rowIndex < 2; rowIndex++ {
+		failedScenario := &gauge_messages.ProtoScenario{
+			ScenarioHeading: heading,
+			ExecutionStatus: gauge_messages.ExecutionStatus_FAILED,
+		}
+		r := NewScenarioResult(failedScenario)
+		specResult.AddTableDrivenScenarioResult(r, table, rowIndex, 0, false)
+	}
+
+	// The spec is marked failed, but the per-row failed count is NOT incremented
+	// here - aggregation is owned by executeScenarioTableDrivenScenarios.
+	c.Assert(specResult.GetFailed(), gc.Equals, true)
+	c.Assert(specResult.ScenarioFailedCount, gc.Equals, 0)
+	c.Assert(len(specResult.ProtoSpec.Items), gc.Equals, 2)
+}
