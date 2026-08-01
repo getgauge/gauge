@@ -20,7 +20,7 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           check-latest: true
           go-version-file: 'go.mod'
@@ -37,12 +37,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           check-latest: true
           go-version-file: 'go.mod'
       - name: Set up Nodejs
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
           check-latest: 'true'
@@ -105,12 +105,12 @@ jobs:
     steps:
       - uses: actions/checkout@v7
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           check-latest: true
           go-version-file: 'go.mod'
       - name: Setup java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.6.0
         with:
           distribution: 'temurin'
           java-version: '21'
@@ -204,7 +204,7 @@ jobs:
       - uses: actions/checkout@v7
 
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           check-latest: true
           go-version-file: 'go.mod'
@@ -246,13 +246,13 @@ jobs:
         with:
           path: gauge
       - name: Set up Go
-        uses: actions/setup-go@v6
+        uses: actions/setup-go@v7
         with:
           check-latest: true
           go-version-file: 'gauge/go.mod'
           cache-dependency-path: 'gauge/go.sum'
       - name: Setup java
-        uses: actions/setup-java@v5
+        uses: actions/setup-java@v5.6.0
         with:
           distribution: 'temurin'
           java-version: '21'
