@@ -9,7 +9,7 @@ require (
 	github.com/getgauge/common v0.0.0-20260302065729-fff3970eabd9
 	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20260401050029-a9cd9db4a825
 	github.com/golang/protobuf v1.5.4
-	github.com/magiconair/properties v1.8.10
+	github.com/magiconair/properties v1.18.11
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday/v2 v2.1.0
@@ -31,9 +31,9 @@ require (
 	github.com/inconshreveable/mousetrap v1.1.0 // indirect
 	github.com/kr/pretty v0.3.1 // indirect
 	github.com/kr/text v0.2.0 // indirect
-	github.com/mattn/go-isatty v0.0.22 // indirect
+	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/rogpeppe/go-internal v1.15.0 // indirect
-	go.yaml.in/yaml/v3 v3.0.4 // indirect
+	go.yaml.in/yaml/v3 v3.0.5 // indirect
 	golang.org/x/net v0.57.0 // indirect
 	golang.org/x/sys v0.47.0 // indirect
 	golang.org/x/text v0.40.0 // indirect
