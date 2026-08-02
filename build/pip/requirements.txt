@@ -11,7 +11,7 @@ requests==2.34.2
 setuptools==83.0.0
 
 # Publish
-twine==6.2.0
+twine==7.0.0
 
 # =============================================================================
 # Locked transitive dependencies
@@ -19,14 +19,14 @@ twine==6.2.0
 # reproducible installs. Do not edit by hand -- regenerate periodically after
 # changing a direct dep
 # =============================================================================
-certifi==2026.6.17
+certifi==2026.7.22
 charset-normalizer==3.4.9
 docutils==0.23
 id==1.6.1
 idna==3.18
 jaraco.classes==3.4.0
 jaraco.context==6.1.2
-jaraco.functools==4.5.0
+jaraco.functools==4.6.0
 keyring==25.7.0
 markdown-it-py==4.2.0
 mdurl==0.1.2
