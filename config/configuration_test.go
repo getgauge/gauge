@@ -11,29 +11,18 @@ import (
 	"testing"
 )
 
-func stubGetFromConfig(propertyName string) string {
-	return ""
-}
+func stubGetFromConfig(propertyName string) string { return "" }
+func stub2GetFromConfig(propertyName string) string { return "10000" }
+func stub3GetFromConfig(propertyName string) string { return "false" }
+func stub4GetFromConfig(propertyName string) string { return "true	" }
 
-func stub2GetFromConfig(propertyName string) string {
-	return "10000"
-}
+func stubLogMaxBackupsCountDefault(propertyName string) string { return "" }
+func stubLogMaxBackupsCountCustom(propertyName string) string { return "10" }
 
-func stub3GetFromConfig(propertyName string) string {
-	return "false"
-}
+func stubDataTableModeFilter(propertyName string) string { return "filter" }
+func stubDataTableModeMatrix(propertyName string) string { return "matrix" }
+func stubDataTableModeInvalid(propertyName string) string { return "banana" }
 
-func stub4GetFromConfig(propertyName string) string {
-	return "true	"
-}
-
-func stubLogMaxBackupsCountDefault(propertyName string) string {
-    return ""
-}
-
-func stubLogMaxBackupsCountCustom(propertyName string) string {
-    return "10"
-}
 
 func TestRunnerRequestTimeout(t *testing.T) {
 	getFromConfig = stubGetFromConfig
@@ -91,5 +80,27 @@ func TestLogMaxBackups(t *testing.T) {
 	got = LogMaxBackupsCount()
 	if got != 10 {
 		t.Errorf("expected LogMaxBackupsCount to be 10, got %d", got)
+	}
+}
+
+func TestDataTableMode(t *testing.T) {
+	getFromConfig = stubGetFromConfig
+	if DataTableMode() != "filter" {
+		t.Errorf("expected default to be 'filter'")
+	}
+
+	getFromConfig = stubDataTableModeFilter
+	if DataTableMode() != "filter" {
+		t.Errorf("expected 'filter'")
+	}
+
+	getFromConfig = stubDataTableModeMatrix
+	if DataTableMode() != "matrix" {
+		t.Errorf("expected 'matrix'")
+	}
+
+	getFromConfig = stubDataTableModeInvalid
+	if DataTableMode() != "filter" {
+		t.Errorf("expected fallback to 'filter' on invalid value")
 	}
 }

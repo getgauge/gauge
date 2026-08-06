@@ -12,12 +12,16 @@ import (
 )
 
 // GetSpecsForDataTableRows creates a spec for each data table row
-func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
+func GetSpecsForDataTableRows(s []*gauge.Specification, data_table_mode string, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for _, spec := range s {
 		if spec.DataTable.IsInitialized() {
 			if spec.UsesArgsInContextTeardown(spec.DataTable.Table.Headers...) {
 				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios, errMap)...)
+			} else if data_table_mode == "matrix" {
+				// all scenarios run against all data table rows
+				specs = append(specs, createSpecsForTableRows(spec, spec.Scenarios, errMap)...)
 			} else {
+				// scenarios without accessing the data table, are executed once
 				nonTableRelatedScenarios, tableRelatedScenarios := FilterTableRelatedScenarios(spec.Scenarios, func(scenario *gauge.Scenario) bool {
 					return scenario.UsesArgsInSteps(spec.DataTable.Table.Headers...)
 				})

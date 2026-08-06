@@ -18,6 +18,7 @@ func TestJSONFormatter(t *testing.T) {
 		"Key                           	Value                              ",
 		"allow_insecure_download       	false                              ",
 		"check_updates                 	true                               ",
+		"data_table_mode               	filter                             ",
 		"gauge_repository_url          	https://downloads.gauge.org/plugin ",
 		"ide_request_timeout           	30000                              ",
 		"log_max_backups_count         	3                                  ",

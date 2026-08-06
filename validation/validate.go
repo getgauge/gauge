@@ -24,6 +24,7 @@ import (
 
 	gm "github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/api"
+	"github.com/getgauge/gauge/config"
 	"github.com/getgauge/gauge/gauge"
 	"github.com/getgauge/gauge/logger"
 	"github.com/getgauge/gauge/parser"
@@ -173,7 +174,7 @@ func ValidateSpecs(specsToValidate []string, debug bool) *ValidationResult {
 	r := startAPI(debug)
 	validationErrors := NewValidator(specs, r, conceptDict).Validate()
 	errMap = getErrMap(errMap, validationErrors)
-	specs = parser.GetSpecsForDataTableRows(specs, errMap)
+	specs = parser.GetSpecsForDataTableRows(specs, config.DataTableMode(), errMap)
 	printValidationFailures(validationErrors)
 	showSuggestion(validationErrors)
 	if !res.Ok {

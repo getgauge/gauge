@@ -94,7 +94,7 @@ var tests = []DataTableSpecTest{
 
 func TestGetSpecsForDataTableRows(t *testing.T) {
 	for _, test := range tests {
-		got := GetSpecsForDataTableRows(test.specs, gauge.NewBuildErrors())
+		got := GetSpecsForDataTableRows(test.specs, "filter", gauge.NewBuildErrors())
 
 		if len(got) != test.want {
 			t.Errorf("Failed: %s. Wanted: %d specs, Got: %d specs", test.message, test.want, len(got))
@@ -115,7 +115,7 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 			}, 0)},
 		},
 	}
-	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+	actualSpecs := GetSpecsForDataTableRows(specs, "filter", gauge.NewBuildErrors())
 	if !containsScenario(actualSpecs[0].Scenarios, actualSpecs[0].Items) {
 		itemsJSON, _ := json.Marshal(actualSpecs[0].Items)
 		scnJSON, _ := json.Marshal(actualSpecs[0].Scenarios)
@@ -151,7 +151,7 @@ func TestGetSpecsForDataTableRowsShouldHaveEqualNumberOfScenearioInSpecsScenario
 			},
 		},
 	}
-	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+	actualSpecs := GetSpecsForDataTableRows(specs, "filter", gauge.NewBuildErrors())
 
 	if !containsScenario(actualSpecs[0].Scenarios, actualSpecs[0].Items) {
 		itemsJSON, _ := json.Marshal(actualSpecs[0].Items)
@@ -184,7 +184,7 @@ func TestGetSpecsForDataTableRowsWithMixedScenarios(t *testing.T) {
 		},
 	}
 
-	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+	actualSpecs := GetSpecsForDataTableRows(specs, "filter", gauge.NewBuildErrors())
 
 	if len(actualSpecs) != 2 {
 		t.Errorf("Expected 2 specs (one per spec table row), got %d", len(actualSpecs))

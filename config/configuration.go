@@ -26,6 +26,7 @@ const (
 	checkUpdates            = "check_updates"
 	allowInsecureDownload   = "allow_insecure_download"
 	logMaxBackupsCount      = "log_max_backups_count"
+	dataTableMode           = "data_table_mode"
 
 	defaultRunnerConnectionTimeout = time.Second * 25
 	defaultPluginConnectionTimeout = time.Second * 10
@@ -34,6 +35,7 @@ const (
 	defaultRunnerRequestTimeout    = time.Second * 30
 	defaultIdeRequestTimeout       = time.Second * 30
 	defaultLogMaxBackupsCount      = 3
+	defaultDataTableMode           = "filter"
 	LayoutForTimeStamp             = "Jan 2, 2006 at 3:04pm"
 )
 
@@ -101,6 +103,21 @@ func LogMaxBackupsCount() int {
 		return defaultLogMaxBackupsCount
 	}
 	return convertToInt(log_max_backups_count, logMaxBackupsCount, defaultLogMaxBackupsCount)
+}
+
+func DataTableMode() string {
+	mode := getFromConfig(dataTableMode)
+	switch mode {
+	case "matrix":
+		return "matrix"
+	case "filter":
+		return "filter"
+	default:
+		if mode != "" && mode != defaultDataTableMode {
+			APILog.Warningf("Unknown value for %s: '%s'. Falling back to '%s'.", dataTableMode, mode, defaultDataTableMode)
+		}
+		return defaultDataTableMode
+	}
 }
 
 // GaugeRepositoryUrl fetches the repository URL to locate plugins
