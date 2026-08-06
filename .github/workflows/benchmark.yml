@@ -15,6 +15,7 @@ jobs:
       matrix:
         project: [java_simple, java_maven, java_gradle]
         parallel: ['parallel', 'serial', 'multithreaded']
+      fail-fast: false
 
     env:
       PARALLEL: ${{ matrix.parallel }}

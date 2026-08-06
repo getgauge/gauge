@@ -16,6 +16,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v7
@@ -34,6 +35,8 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v7
       - name: Set up Go
@@ -102,6 +105,8 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest]
+      fail-fast: false
+
     steps:
       - uses: actions/checkout@v7
       - name: Set up Go
@@ -199,6 +204,7 @@ jobs:
     strategy:
       matrix:
         os: [windows-latest, ubuntu-latest, macos-latest]
+      fail-fast: false
 
     steps:
       - uses: actions/checkout@v7
@@ -238,6 +244,8 @@ jobs:
       matrix:
         project: [java_simple, java_maven, java_gradle]
         parallel: ['parallel', 'serial', 'multithreaded']
+      fail-fast: false
+
     env:
       BENCHMARK_OUT_DIR: "../out"
 
