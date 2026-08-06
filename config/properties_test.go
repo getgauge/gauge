@@ -110,6 +110,9 @@ allow_insecure_download = false
 # Allow Gauge and its plugin updates to be notified.
 check_updates = true
 
+# How data table rows are applied to scenarios. Use 'filter' to execute scenarios without using the data table once, or 'matrix' to run all scenarios against all data table rows.
+data_table_mode = filter
+
 # Url to get plugin versions
 gauge_repository_url = https://downloads.gauge.org/plugin
 

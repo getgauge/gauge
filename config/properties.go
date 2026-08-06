@@ -98,6 +98,7 @@ func defaults() *properties {
 		ideRequestTimeout:       NewProperty(ideRequestTimeout, "30000", "Timeout in milliseconds for requests from runner when invoked for ide."),
 		checkUpdates:            NewProperty(checkUpdates, "true", "Allow Gauge and its plugin updates to be notified."),
 		logMaxBackupsCount:      NewProperty(logMaxBackupsCount, "3", "The maximum number of backup log files to retain."),
+		dataTableMode:           NewProperty(dataTableMode, "filter", "How data table rows are applied to scenarios. Use 'filter' to execute scenarios without using the data table once, or 'matrix' to run all scenarios against all data table rows."),
 	}}
 }
 
