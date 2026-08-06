@@ -195,3 +195,122 @@ func TestStepExecutionShouldGetScreenshotsAfterStep(t *testing.T) {
 		}
 	}
 }
+
+func TestStepExecutionShouldRetryOnFailureWhenConditionIsNotSet(t *testing.T) {
+	MaxStepRetriesCount = 3
+	RetryStepOn = ""
+	defer resetStepRetryOptions()
+
+	r := &mockRunner{}
+	attempts := 0
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_ExecuteStep {
+			attempts++
+			if attempts < MaxStepRetriesCount {
+				return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "transient failure"}
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+
+	se, step, protoStep := newStepExecutorForRetryTests(r)
+	stepResult := se.executeStep(step, protoStep)
+
+	if attempts != MaxStepRetriesCount {
+		t.Errorf("Expected step to execute %d times, got %d", MaxStepRetriesCount, attempts)
+	}
+	if stepResult.GetFailed() {
+		t.Errorf("Expected successful step execution result")
+	}
+}
+
+func TestStepExecutionShouldRetryOnlyWhenConditionMatches(t *testing.T) {
+	MaxStepRetriesCount = 3
+	RetryStepOn = "TimeoutException|429"
+	defer resetStepRetryOptions()
+
+	r := &mockRunner{}
+	attempts := 0
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_ExecuteStep {
+			attempts++
+			if attempts == 1 {
+				return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "HTTP 429 TimeoutException"}
+			}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+
+	se, step, protoStep := newStepExecutorForRetryTests(r)
+	stepResult := se.executeStep(step, protoStep)
+
+	if attempts != 2 {
+		t.Errorf("Expected step to execute twice, got %d", attempts)
+	}
+	if stepResult.GetFailed() {
+		t.Errorf("Expected successful step execution result")
+	}
+}
+
+func TestStepExecutionShouldNotRetryWhenConditionDoesNotMatch(t *testing.T) {
+	MaxStepRetriesCount = 3
+	RetryStepOn = "TimeoutException"
+	defer resetStepRetryOptions()
+
+	r := &mockRunner{}
+	attempts := 0
+	r.ExecuteAndGetStatusFunc = func(m *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+		if m.MessageType == gauge_messages.Message_ExecuteStep {
+			attempts++
+			return &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "AssertionError"}
+		}
+		return &gauge_messages.ProtoExecutionResult{}
+	}
+
+	se, step, protoStep := newStepExecutorForRetryTests(r)
+	stepResult := se.executeStep(step, protoStep)
+
+	if attempts != 1 {
+		t.Errorf("Expected step to execute once, got %d", attempts)
+	}
+	if !stepResult.GetFailed() {
+		t.Errorf("Expected failed step execution result")
+	}
+}
+
+func newStepExecutorForRetryTests(r *mockRunner) (*stepExecutor, *gauge.Step, *gauge_messages.ProtoStep) {
+	h := &mockPluginHandler{NotifyPluginsfunc: func(m *gauge_messages.Message) {}, GracefullyKillPluginsfunc: func() {}}
+	ei := &gauge_messages.ExecutionInfo{
+		CurrentSpec: &gauge_messages.SpecInfo{
+			Name:     "Example Spec",
+			FileName: "example.spec",
+			IsFailed: false,
+		},
+		CurrentScenario: &gauge_messages.ScenarioInfo{
+			Name:     "Example Scenario",
+			IsFailed: false,
+		},
+		CurrentStep: &gauge_messages.StepInfo{
+			Step: &gauge_messages.ExecuteStepRequest{
+				ActualStepText:  "a simple step",
+				ParsedStepText:  "a simple step",
+				ScenarioFailing: false,
+			},
+			IsFailed: false,
+		},
+	}
+	se := &stepExecutor{runner: r, pluginHandler: h, currentExecutionInfo: ei, stream: 0}
+	step := &gauge.Step{
+		Value:     "a simple step",
+		LineText:  "a simple step",
+		Fragments: []*gauge_messages.Fragment{{FragmentType: gauge_messages.Fragment_Text, Text: "a simple step"}},
+	}
+	protoStep := gauge.ConvertToProtoItem(step).GetStep()
+	protoStep.StepExecutionResult = &gauge_messages.ProtoStepExecutionResult{}
+	return se, step, protoStep
+}
+
+func resetStepRetryOptions() {
+	MaxStepRetriesCount = 1
+	RetryStepOn = ""
+}
