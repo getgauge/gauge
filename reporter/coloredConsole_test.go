@@ -32,7 +32,7 @@ func (s *MySuite) TestScenarioStartInNonVerbose_ColoredConsole(c *C) {
 func (s *MySuite) TestScenarioEndInNonVerbose_ColoredConsole(c *C) {
 	dw, cc := setupColoredConsole()
 	cc.indentation = 2
-	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED, Failed: true})
+	scnRes := result.NewScenarioResult(&gauge_messages.ProtoScenario{ExecutionStatus: gauge_messages.ExecutionStatus_FAILED})
 	cc.ScenarioStart(&gauge.Scenario{Heading: &gauge.Heading{Value: "failing step"}}, &gauge_messages.ExecutionInfo{}, scnRes)
 	dw.output = ""
 

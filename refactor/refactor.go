@@ -397,12 +397,12 @@ func getFileChanges(specs []*gauge.Specification, conceptDictionary *gauge.Conce
 	for _, spec := range specs {
 		if stepDiffs, ok := specsRefactored[spec]; ok {
 			formatted := formatter.FormatSpecification(spec)
-			specFiles = append(specFiles, &gauge_messages.FileChanges{FileName: spec.FileName, FileContent: formatted, Diffs: createDiffs(stepDiffs)})
+			specFiles = append(specFiles, &gauge_messages.FileChanges{FileName: spec.FileName, FileContent: formatted, Diffs: createDiffs(stepDiffs)}) //nolint:staticcheck
 		}
 	}
 	conceptMap := formatter.FormatConcepts(conceptDictionary)
 	for file, diffs := range conceptsRefactored {
-		conceptFiles = append(conceptFiles, &gauge_messages.FileChanges{FileName: file, FileContent: conceptMap[file], Diffs: createDiffs(diffs)})
+		conceptFiles = append(conceptFiles, &gauge_messages.FileChanges{FileName: file, FileContent: conceptMap[file], Diffs: createDiffs(diffs)}) //nolint:staticcheck
 	}
 	return specFiles, conceptFiles
 }
