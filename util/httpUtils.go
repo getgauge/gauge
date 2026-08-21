@@ -10,13 +10,55 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/getgauge/gauge/logger"
 
 	"github.com/getgauge/common"
 )
+
+// Environment variables a GitHub token is read from, in order of precedence.
+// GAUGE_GITHUB_TOKEN exists so a CI job can give Gauge a token without
+// widening what every other tool in the job sees through GITHUB_TOKEN.
+const (
+	gaugeGitHubTokenEnv = "GAUGE_GITHUB_TOKEN"
+	gitHubTokenEnv      = "GITHUB_TOKEN"
+)
+
+// gitHubHosts are the hosts a token may be sent to. Deliberately narrow:
+// release assets on github.com redirect to objects.githubusercontent.com,
+// which rejects a request carrying an Authorization header. net/http drops
+// the header on that cross-host hop by itself, and this list makes sure we
+// never put it there in the first place either.
+var gitHubHosts = map[string]bool{
+	"github.com":          true,
+	"www.github.com":      true,
+	"api.github.com":      true,
+	"codeload.github.com": true,
+}
+
+// gitHubToken returns the token to authenticate rawURL with, or "" when the
+// URL is not a GitHub host or no token is configured.
+//
+// Unauthenticated GitHub traffic is rate limited hard enough that plugin
+// installs fail on shared CI runners — usually as a 504 while GitHub sheds
+// load, rather than an explicit 403, which is why the failure does not look
+// like a rate limit.
+func gitHubToken(rawURL string) string {
+	parsed, err := url.Parse(rawURL)
+	if err != nil || !gitHubHosts[strings.ToLower(parsed.Hostname())] {
+		return ""
+	}
+	for _, name := range []string{gaugeGitHubTokenEnv, gitHubTokenEnv} {
+		if token := strings.TrimSpace(os.Getenv(name)); token != "" {
+			return token
+		}
+	}
+	return ""
+}
 
 // progressReader is for indicating the download / upload progress on the console
 type progressReader struct {
@@ -55,7 +97,17 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	targetFile := filepath.Join(targetDir, fileName)
 
 	logger.Debugf(true, "Downloading %s", url)
-	resp, err := http.Get(url)
+	req, err := http.NewRequest(http.MethodGet, url, nil)
+	if err != nil {
+		return "", err
+	}
+	if token := gitHubToken(url); token != "" {
+		// Never logged: the header is set on the request and nothing prints
+		// req.Header. The token is not in the URL either, so the Debugf above
+		// and every error below carry the URL only.
+		req.Header.Set("Authorization", "Bearer "+token)
+	}
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return "", err
 	}

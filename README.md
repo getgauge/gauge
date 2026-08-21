@@ -42,6 +42,35 @@ Read more about [Why Gauge](https://gauge.org/2018/05/15/why-we-built-gauge/) ca
 [contributing]:CONTRIBUTING.md
 [branding]:https://brand.gauge.org/
 
+## Authenticating plugin downloads
+
+`gauge install <plugin>` fetches plugin releases from GitHub. Unauthenticated
+GitHub traffic is rate limited hard enough that installs fail on shared CI
+runners — often as a `504 Gateway Timeout` while GitHub sheds load rather than
+an explicit rate-limit error, which is why the failure does not look like one.
+
+Set a token and Gauge sends it as `Authorization: Bearer <token>`:
+
+| Variable | Notes |
+|---|---|
+| `GAUGE_GITHUB_TOKEN` | Checked first. Use it to give Gauge a token without widening what every other tool in the job sees. |
+| `GITHUB_TOKEN` | Used when `GAUGE_GITHUB_TOKEN` is unset. On GitHub Actions this is the automatic per-job token. |
+
+A read-only token is enough — plugin releases are public, and the token is only
+there to raise the rate limit.
+
+```yaml
+- run: gauge install java
+  env:
+    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The token is sent only to `github.com`, `www.github.com`, `api.github.com` and
+`codeload.github.com`. It is never sent to a redirect target such as
+`objects.githubusercontent.com`, which is where release assets actually live
+and which rejects requests that carry an `Authorization` header. It is never
+logged: it is not part of any URL, and nothing prints request headers.
+
 ## Questions or need help?
 
 ### Troubleshooting
