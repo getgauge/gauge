@@ -8,7 +8,7 @@
 requests==2.34.2
 
 # Build / codegen
-setuptools==83.0.0
+setuptools==84.0.0
 
 # Publish
 twine==7.0.0
@@ -20,10 +20,10 @@ twine==7.0.0
 # changing a direct dep
 # =============================================================================
 certifi==2026.7.22
-charset-normalizer==3.4.9
+charset-normalizer==3.5.1
 docutils==0.23
 id==1.6.1
-idna==3.18
+idna==3.19
 jaraco.classes==3.4.0
 jaraco.context==6.1.2
 jaraco.functools==4.6.0
@@ -31,10 +31,10 @@ keyring==25.7.0
 markdown-it-py==4.2.0
 mdurl==0.1.2
 more-itertools==11.1.0
-nh3==0.3.6
-packaging==26.2
-Pygments==2.20.0
-readme-renderer==45.0
+nh3==0.3.7
+packaging==26.3
+Pygments==2.21.0
+readme-renderer==46.0
 requests-toolbelt==1.0.0
 rfc3986==2.0.0
 rich==15.0.0
