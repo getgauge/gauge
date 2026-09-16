@@ -59,13 +59,12 @@ func Download(url, targetDir, fileName string, silent bool) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	if resp.StatusCode != 200 {
-		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
-	}
-
 	defer func(Body io.ReadCloser) {
 		_ = Body.Close()
 	}(resp.Body)
+	if resp.StatusCode != 200 {
+		return "", fmt.Errorf("Error downloading file: %s.\n%s", url, resp.Status)
+	}
 
 	out, err := os.Create(targetFile)
 	if err != nil {
