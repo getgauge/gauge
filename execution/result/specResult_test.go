@@ -38,7 +38,7 @@ func (s *MySuite) TestAddScenarioResults(c *gc.C) {
 
 }
 
-func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
+func (s *MySuite) TestAddSpecTableRelatedScenarioResult(c *gc.C) {
 	specItems := []*gauge_messages.ProtoItem{}
 	protoSpec := &gauge_messages.ProtoSpec{
 		Items: specItems,
@@ -61,13 +61,15 @@ func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	results = append(results, scenarioResultsForIndex0)
 	results = append(results, scenarioResultsForIndex1)
 
-	specResult.AddTableRelatedScenarioResult(results, 1)
+	specResult.AddSpecTableRelatedScenarioResult(results, 1)
 
 	c.Assert(specResult.GetFailed(), gc.Equals, false)
 	c.Assert(specResult.ScenarioCount, gc.Equals, 2)
 	c.Assert(specResult.ProtoSpec.IsTableDriven, gc.Equals, true)
 	c.Assert(specResult.ScenarioFailedCount, gc.Equals, 0)
 	c.Assert(specResult.ExecutionTime, gc.Equals, int64(0))
+	c.Assert(specResult.ProtoSpec.Items[0].TableDrivenScenario.IsScenarioTableDriven, gc.Equals, false)
+	c.Assert(specResult.ProtoSpec.Items[0].TableDrivenScenario.ScenarioTableRowIndex, gc.Equals, int32(-1))
 }
 
 // A scenario that owns a scenario-level data table runs once per row. The

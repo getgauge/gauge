@@ -96,7 +96,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	}
 	if execute && !e.specResult.GetFailed() {
 		if e.specification.DataTable.Table.GetRowCount() == 0 {
-			others, tableDriven := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
+			others, scenarioTableDriven := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
 				return s.ScenarioDataTableRow.IsInitialized()
 			})
 			results, err := e.executeScenarios(others)
@@ -104,7 +104,7 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 				logger.Fatalf(true, "Failed to resolve Specifications : %s", err.Error())
 			}
 			e.specResult.AddScenarioResults(results)
-			e.executeScenarioTableDrivenScenarios(tableDriven)
+			e.executeScenarioTableDrivenScenarios(scenarioTableDriven)
 		} else {
 			err := e.executeSpec()
 			if err != nil {
@@ -122,26 +122,26 @@ func (e *specExecutor) execute(executeBefore, execute, executeAfter bool) *resul
 	return e.specResult
 }
 
-func (e *specExecutor) executeTableRelatedScenarios(scenarios []*gauge.Scenario) error {
+func (e *specExecutor) executeSpecTableRelatedScenarios(scenarios []*gauge.Scenario) error {
 	if len(scenarios) > 0 {
-		index := e.specification.Scenarios[0].SpecDataTableRowIndex
+		index := scenarios[0].SpecDataTableRowIndex
 		sceRes, err := e.executeScenarios(scenarios)
 		if err != nil {
 			return err
 		}
 		specResult := [][]result.Result{sceRes}
-		e.specResult.AddTableRelatedScenarioResult(specResult, index)
+		e.specResult.AddSpecTableRelatedScenarioResult(specResult, index)
 	}
 	return nil
 }
 
 func (e *specExecutor) executeSpec() error {
 	parser.GetResolvedDataTablerows(e.specification.DataTable.Table)
-	nonTableRelatedScenarios, tableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
+	nonSpecTableRelatedScenarios, specTableRelatedScenarios := parser.FilterTableRelatedScenarios(e.specification.Scenarios, func(s *gauge.Scenario) bool {
 		return s.SpecDataTableRow.IsInitialized()
 	})
 
-	others, scenarioTableDriven := parser.FilterTableRelatedScenarios(nonTableRelatedScenarios, func(s *gauge.Scenario) bool {
+	others, scenarioTableDriven := parser.FilterTableRelatedScenarios(nonSpecTableRelatedScenarios, func(s *gauge.Scenario) bool {
 		return s.ScenarioDataTableRow.IsInitialized()
 	})
 
@@ -151,7 +151,7 @@ func (e *specExecutor) executeSpec() error {
 	}
 	e.specResult.AddScenarioResults(res)
 	e.executeScenarioTableDrivenScenarios(scenarioTableDriven)
-	err = e.executeTableRelatedScenarios(tableRelatedScenarios)
+	err = e.executeSpecTableRelatedScenarios(specTableRelatedScenarios)
 	if err != nil {
 		return err
 	}

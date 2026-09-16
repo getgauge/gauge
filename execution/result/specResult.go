@@ -72,8 +72,7 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(r *ScenarioResult, t 
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, pItem)
 }
 
-// AddTableRelatedScenarioResult aggregates the data table driven spec results.
-func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
+func (specResult *SpecResult) AddSpecTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {
@@ -97,7 +96,11 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 				protoTableDrivenScenario.IsScenarioTableDriven = true
 				protoTableDrivenScenario.ScenarioTableRowIndex = int32(result.ScenarioDataTableRowIndex)
 				protoTableDrivenScenario.ScenarioDataTable = result.ScenarioDataTable
+			} else {
+				protoTableDrivenScenario.IsScenarioTableDriven = false
+				protoTableDrivenScenario.ScenarioTableRowIndex = -1
 			}
+
 			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario} // nolint
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}
