@@ -26,6 +26,7 @@ tags
 bin/
 deploy
 .idea
+*.iml
 *.ipr
 *.iws
 _workspace/

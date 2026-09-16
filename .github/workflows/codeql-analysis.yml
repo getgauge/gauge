@@ -28,7 +28,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           check-latest: true
-          go-version-file: 'go.mod'
+          go-version-file: .tool-versions
 
       # Initializes the CodeQL tools for scanning.
       - name: Initialize CodeQL
