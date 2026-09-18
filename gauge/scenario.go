@@ -19,6 +19,7 @@ type Scenario struct {
 	DataTable                 DataTable
 	SpecDataTableRow          Table
 	SpecDataTableRowIndex     int
+	HasSpecDataTable          bool
 	ScenarioDataTableRow      Table
 	ScenarioDataTableRowIndex int
 	Span                      *Span
