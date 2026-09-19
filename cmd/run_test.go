@@ -219,6 +219,45 @@ func TestHandleConflictingParamsWithJustRepeatFlag(t *testing.T) {
 	}
 }
 
+func TestHandleConflictingParamsWithRetryStepOnWithoutStepRetries(t *testing.T) {
+	origRepeat := repeat
+	origFailed := failed
+	origMaxStepRetriesCount := maxStepRetriesCount
+	origRetryStepOn := retryStepOn
+	defer func() {
+		repeat = origRepeat
+		failed = origFailed
+		maxStepRetriesCount = origMaxStepRetriesCount
+		retryStepOn = origRetryStepOn
+	}()
+
+	args := []string{}
+
+	var flags = pflag.FlagSet{}
+	flags.Int(maxStepRetriesName, maxStepRetriesDefault, "")
+	err := flags.Set(maxStepRetriesName, "1")
+	if err != nil {
+		t.Error(err)
+	}
+	flags.String(retryStepOnName, retryStepOnDefault, "")
+	err = flags.Set(retryStepOnName, "TimeoutException")
+	if err != nil {
+		t.Error(err)
+	}
+
+	repeat = false
+	failed = false
+	maxStepRetriesCount = 1
+	retryStepOn = "TimeoutException"
+
+	expectedErrorMessage := "Invalid Command. flag --retry-step-on can be used only with --max-step-retries-count"
+	err = handleConflictingParams(&flags, args)
+
+	if !reflect.DeepEqual(err.Error(), expectedErrorMessage) {
+		t.Errorf("Expected %v  Got %v", expectedErrorMessage, err)
+	}
+}
+
 func TestHandleRerunFlagsWithVerbose(t *testing.T) {
 	if os.Getenv("TEST_EXITS") == "1" {
 		cmd := &cobra.Command{}

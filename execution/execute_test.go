@@ -69,3 +69,33 @@ func (s *MySuite) TestValidateFlagsWithInvalidStream(c *C) {
 	err := validateFlags()
 	c.Assert(err.Error(), Equals, "invalid input(-1) to --n flag")
 }
+
+func (s *MySuite) TestValidateFlagsWithInvalidMaxStepRetries(c *C) {
+	defer func() {
+		MaxRetriesCount = 1
+		MaxStepRetriesCount = 1
+		RetryStepOn = ""
+		InParallel = false
+	}()
+	InParallel = false
+	MaxRetriesCount = 1
+	MaxStepRetriesCount = 0
+	RetryStepOn = ""
+	err := validateFlags()
+	c.Assert(err.Error(), Equals, "invalid input(0) to --max-step-retries-count flag")
+}
+
+func (s *MySuite) TestValidateFlagsWithInvalidStepRetryCondition(c *C) {
+	defer func() {
+		MaxRetriesCount = 1
+		MaxStepRetriesCount = 1
+		RetryStepOn = ""
+		InParallel = false
+	}()
+	InParallel = false
+	MaxRetriesCount = 1
+	MaxStepRetriesCount = 2
+	RetryStepOn = "["
+	err := validateFlags()
+	c.Assert(err.Error(), Equals, "invalid input([) to --retry-step-on flag")
+}
