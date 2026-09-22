@@ -16,7 +16,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           check-latest: true
-          go-version-file: 'go.mod'
+          go-version-file: .tool-versions
 
       - name: Compile gauge
         run: go run build/make.go --all-platforms  --skip-windows
@@ -40,7 +40,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           check-latest: true
-          go-version-file: 'go.mod'
+          go-version-file: .tool-versions
 
       - name: Compile gauge
         run: |
