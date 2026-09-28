@@ -68,6 +68,8 @@ func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	c.Assert(specResult.ProtoSpec.IsTableDriven, gc.Equals, true)
 	c.Assert(specResult.ScenarioFailedCount, gc.Equals, 0)
 	c.Assert(specResult.ExecutionTime, gc.Equals, int64(0))
+	c.Assert(specResult.ProtoSpec.Items[0].TableDrivenScenario.IsScenarioTableDriven, gc.Equals, false)
+	c.Assert(specResult.ProtoSpec.Items[0].TableDrivenScenario.ScenarioTableRowIndex, gc.Equals, int32(-1))
 }
 
 // A scenario that owns a scenario-level data table runs once per row. The
