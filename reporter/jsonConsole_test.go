@@ -717,6 +717,48 @@ func (s *MySuite) TestSpecEndWithNoScenariosInSpec_JSONConsole(c *C) {
 	c.Assert(dw.output, Equals, expected)
 }
 
+// A spec expanded per spec table row because its context/teardown uses the spec table
+// must be identified by its own row, even if its scenarios do not use the spec table.
+func (s *MySuite) TestSpecStartAndEndInParallelWithSpecDataTable_JSONConsole(c *C) {
+	dw := newDummyWriter()
+	jc := newJSONConsole(dw, true, 1)
+	protoSpec := &gauge_messages.ProtoSpec{
+		FileName:    "file",
+		SpecHeading: "Specification",
+	}
+	scenarios := []*gauge.Scenario{
+		{
+			Heading: &gauge.Heading{
+				Value:       "Scenario",
+				LineNo:      4,
+				HeadingType: 1,
+			},
+			SpecDataTableRowIndex:     -1,
+			ScenarioDataTableRow:      *gauge.NewTable([]string{"header"}, [][]gauge.TableCell{{{Value: "value1", CellType: gauge.Static}}}, 0),
+			ScenarioDataTableRowIndex: 0,
+		},
+	}
+	spec := &gauge.Specification{
+		FileName: "file",
+		Heading: &gauge.Heading{
+			Value:       "Specification",
+			LineNo:      1,
+			HeadingType: 0,
+		},
+		DataTable:         gauge.DataTable{Table: gauge.NewTable([]string{"specHeader"}, [][]gauge.TableCell{{{Value: "row2", CellType: gauge.Static}}}, 0)},
+		DataTableRowIndex: 1,
+		Scenarios:         scenarios,
+	}
+
+	jc.SpecStart(spec, &result.SpecResult{ProtoSpec: protoSpec})
+	jc.SpecEnd(spec, &result.SpecResult{ProtoSpec: protoSpec})
+
+	expected := `{"type":"specStart","id":"file:1","name":"Specification","filename":"file","line":1,"stream":1}
+{"type":"specEnd","id":"file:1","name":"Specification","filename":"file","line":1,"stream":1,"result":{"status":"pass","time":0}}
+`
+	c.Assert(dw.output, Equals, expected)
+}
+
 func (s *MySuite) TestSuiteEnd_JSONConsole(c *C) {
 	dw, jc := setupJSONConsole()
 

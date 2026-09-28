@@ -30,11 +30,11 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 					}
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, spec, errMap))
+					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, -1, spec, errMap))
 				}
 			}
 		} else {
-			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, spec, errMap))
+			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, -1, spec, errMap))
 		}
 	}
 	return
@@ -43,15 +43,15 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 func createSpecsForTableRows(spec *gauge.Specification, scns []*gauge.Scenario, errMap *gauge.BuildErrors) (specs []*gauge.Specification) {
 	for i := range spec.DataTable.Table.Rows() {
 		t := getTableWithOneRow(spec.DataTable.Table, i)
-		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), t, spec, errMap)
+		newSpec := createSpec(copyScenarios(scns, *t, i, errMap), t, i, spec, errMap)
 		specs = append(specs, newSpec)
 	}
 	return
 }
 
-func createSpec(scns []*gauge.Scenario, table *gauge.Table, spec *gauge.Specification, errMap *gauge.BuildErrors) *gauge.Specification {
+func createSpec(scns []*gauge.Scenario, table *gauge.Table, tableRowIndex int, spec *gauge.Specification, errMap *gauge.BuildErrors) *gauge.Specification {
 	dt := &gauge.DataTable{Table: table, Value: spec.DataTable.Value, LineNo: spec.DataTable.LineNo, IsExternal: spec.DataTable.IsExternal}
-	s := &gauge.Specification{DataTable: *dt, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags}
+	s := &gauge.Specification{DataTable: *dt, DataTableRowIndex: tableRowIndex, FileName: spec.FileName, Heading: spec.Heading, Scenarios: scns, Contexts: spec.Contexts, TearDownSteps: spec.TearDownSteps, Tags: spec.Tags}
 	index := 0
 	for _, item := range spec.Items {
 		if item.Kind() == gauge.DataTableKind {

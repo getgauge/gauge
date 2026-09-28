@@ -265,6 +265,7 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 				}, 0), SpecDataTableRowIndex: 0, ScenarioDataTableRowIndex: -1},
 			},
 			TearDownSteps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "abc", ArgType: gauge.Static}}}},
+			DataTableRowIndex: 0,
 		},
 		{
 			Heading: &gauge.Heading{},
@@ -284,6 +285,7 @@ func TestCreateSpecsForTableRows(t *testing.T) {
 				}, 0), SpecDataTableRowIndex: 1, ScenarioDataTableRowIndex: -1},
 			},
 			TearDownSteps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "abc", ArgType: gauge.Static}}}},
+			DataTableRowIndex: 1,
 		},
 	}
 
@@ -415,6 +417,60 @@ func TestDefaultTableRowIndicesAreSetForScenariosWithoutTableAccess(t *testing.T
 		t.Errorf("%v", errMessage)
 	}
 
+}
+
+func TestSpecsExpandedForContextKeepTheirTableRowIndexWhenScenariosDoNotUseSpecTable(t *testing.T) {
+	specs := []*gauge.Specification{
+		{
+			Heading:  &gauge.Heading{},
+			Contexts: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "specParam", ArgType: gauge.Dynamic, Name: "specParam"}}}},
+			Scenarios: []*gauge.Scenario{
+				{
+					Heading: &gauge.Heading{Value: "Scenario with scenario data table params"},
+					Steps:   []*gauge.Step{{Args: []*gauge.StepArg{{Value: "scenarioParam", ArgType: gauge.Dynamic, Name: "scenarioParam"}}}},
+					DataTable: gauge.DataTable{
+						Table: gauge.NewTable(
+							[]string{"scenarioParam"},
+							[][]gauge.TableCell{{{Value: "scnRow1", CellType: gauge.Static}, {Value: "scnRow2", CellType: gauge.Static}}},
+							0,
+						),
+					},
+				},
+			},
+			DataTable: gauge.DataTable{
+				Table: gauge.NewTable(
+					[]string{"specParam"},
+					[][]gauge.TableCell{{{Value: "row1", CellType: gauge.Static}, {Value: "row2", CellType: gauge.Static}}},
+					0,
+				),
+			},
+		},
+		{
+			Heading:   &gauge.Heading{},
+			Scenarios: []*gauge.Scenario{{Heading: &gauge.Heading{Value: "Scenario without any data table"}, Steps: []*gauge.Step{{Args: []*gauge.StepArg{{Value: "abc", ArgType: gauge.Static}}}}}},
+		},
+	}
+
+	actualSpecs := GetSpecsForDataTableRows(specs, gauge.NewBuildErrors())
+
+	if len(actualSpecs) != 3 {
+		t.Fatalf("Expected 3 specs (2 spec table rows + 1 non data table spec), got %d", len(actualSpecs))
+	}
+
+	for i, spec := range actualSpecs[:2] {
+		if spec.DataTableRowIndex != i {
+			t.Errorf("Spec expanded for row %d has DataTableRowIndex %d", i, spec.DataTableRowIndex)
+		}
+		for _, scn := range spec.Scenarios {
+			if scn.SpecDataTableRow.IsInitialized() || scn.SpecDataTableRowIndex != -1 {
+				t.Errorf("Scenario %q of spec row %d should not be marked as spec table driven", scn.Heading.Value, i)
+			}
+		}
+	}
+
+	if actualSpecs[2].DataTableRowIndex != -1 {
+		t.Errorf("Non data table spec should have DataTableRowIndex -1, got %d", actualSpecs[2].DataTableRowIndex)
+	}
 }
 
 func verifyTableRowIndices(scenario *gauge.Scenario, expectedSpecTableRowIndex int, expectedScenarioTableRowIndex int) (bool, string) {
