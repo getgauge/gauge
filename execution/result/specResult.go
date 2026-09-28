@@ -72,7 +72,8 @@ func (specResult *SpecResult) AddTableDrivenScenarioResult(r *ScenarioResult, t 
 	specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, pItem)
 }
 
-func (specResult *SpecResult) AddSpecTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
+// AddTableRelatedScenarioResult aggregates the data table driven spec results.
+func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]Result, index int) {
 	numberOfScenarios := len(scenarioResults[0])
 
 	for scenarioIndex := 0; scenarioIndex < numberOfScenarios; scenarioIndex++ {

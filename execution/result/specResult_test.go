@@ -38,7 +38,7 @@ func (s *MySuite) TestAddScenarioResults(c *gc.C) {
 
 }
 
-func (s *MySuite) TestAddSpecTableRelatedScenarioResult(c *gc.C) {
+func (s *MySuite) TestAddTableRelatedScenarioResult(c *gc.C) {
 	specItems := []*gauge_messages.ProtoItem{}
 	protoSpec := &gauge_messages.ProtoSpec{
 		Items: specItems,
@@ -61,7 +61,7 @@ func (s *MySuite) TestAddSpecTableRelatedScenarioResult(c *gc.C) {
 	results = append(results, scenarioResultsForIndex0)
 	results = append(results, scenarioResultsForIndex1)
 
-	specResult.AddSpecTableRelatedScenarioResult(results, 1)
+	specResult.AddTableRelatedScenarioResult(results, 1)
 
 	c.Assert(specResult.GetFailed(), gc.Equals, false)
 	c.Assert(specResult.ScenarioCount, gc.Equals, 2)
