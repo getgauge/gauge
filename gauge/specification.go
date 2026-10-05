@@ -43,6 +43,10 @@ type Specification struct {
 	Tags          *Tags
 	Items         []Item
 	TearDownSteps []*Step
+
+	// DataTableRowIndex is the spec data table row this specification was expanded
+	// for by parser.GetSpecsForDataTableRows, or -1 if that did not expand it per row.
+	DataTableRowIndex int
 }
 
 type Item interface {

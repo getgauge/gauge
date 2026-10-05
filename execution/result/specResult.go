@@ -97,7 +97,11 @@ func (specResult *SpecResult) AddTableRelatedScenarioResult(scenarioResults [][]
 				protoTableDrivenScenario.IsScenarioTableDriven = true
 				protoTableDrivenScenario.ScenarioTableRowIndex = int32(result.ScenarioDataTableRowIndex)
 				protoTableDrivenScenario.ScenarioDataTable = result.ScenarioDataTable
+			} else {
+				protoTableDrivenScenario.IsScenarioTableDriven = false
+				protoTableDrivenScenario.ScenarioTableRowIndex = -1
 			}
+
 			protoItem := &gauge_messages.ProtoItem{ItemType: gauge_messages.ProtoItem_TableDrivenScenario, TableDrivenScenario: protoTableDrivenScenario} // nolint
 			specResult.ProtoSpec.Items = append(specResult.ProtoSpec.Items, protoItem)
 		}

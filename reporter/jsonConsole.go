@@ -115,7 +115,7 @@ func (c *jsonConsole) SpecStart(spec *gauge.Specification, res result.Result) {
 	addRow := c.isParallel && spec.DataTable.IsInitialized()
 	c.write(executionEvent{
 		EventType: specStart,
-		ID:        getIDWithRow(spec.FileName, spec.Scenarios, addRow),
+		ID:        getIDWithRow(spec.FileName, spec.DataTableRowIndex, addRow),
 		Name:      spec.Heading.Value,
 		Filename:  spec.FileName,
 		Line:      spec.Heading.LineNo,
@@ -131,7 +131,7 @@ func (c *jsonConsole) SpecEnd(spec *gauge.Specification, res result.Result) {
 	addRow := c.isParallel && spec.DataTable.IsInitialized()
 	e := executionEvent{
 		EventType: specEnd,
-		ID:        getIDWithRow(spec.FileName, spec.Scenarios, addRow),
+		ID:        getIDWithRow(spec.FileName, spec.DataTableRowIndex, addRow),
 		Name:      protoSpec.GetSpecHeading(),
 		Filename:  spec.FileName,
 		Line:      spec.Heading.LineNo,
@@ -149,7 +149,7 @@ func (c *jsonConsole) ScenarioStart(scenario *gauge.Scenario, i *gm.ExecutionInf
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.SpecDataTableRow.IsInitialized()
-	parentID := getIDWithRow(i.CurrentSpec.FileName, []*gauge.Scenario{scenario}, addRow)
+	parentID := getIDWithRow(i.CurrentSpec.FileName, scenario.SpecDataTableRowIndex, addRow)
 	e := executionEvent{
 		EventType: scenarioStart,
 		ID:        parentID + ":" + strconv.Itoa(scenario.Span.Start),
@@ -167,7 +167,7 @@ func (c *jsonConsole) ScenarioEnd(scenario *gauge.Scenario, res result.Result, i
 	c.Lock()
 	defer c.Unlock()
 	addRow := c.isParallel && scenario.SpecDataTableRow.IsInitialized()
-	parentID := getIDWithRow(i.CurrentSpec.FileName, []*gauge.Scenario{scenario}, addRow)
+	parentID := getIDWithRow(i.CurrentSpec.FileName, scenario.SpecDataTableRowIndex, addRow)
 	e := executionEvent{
 		EventType: scenarioEnd,
 		ID:        parentID + ":" + strconv.Itoa(scenario.Span.Start),
@@ -234,11 +234,11 @@ func (c *jsonConsole) write(e executionEvent) {
 	_, _ = fmt.Fprint(c.writer, string(b)+newline)
 }
 
-func getIDWithRow(name string, scenarios []*gauge.Scenario, isDataTable bool) string {
-	if !isDataTable || len(scenarios) < 1 {
+func getIDWithRow(name string, specDataTableRowIndex int, isDataTable bool) string {
+	if !isDataTable {
 		return name
 	}
-	return name + ":" + strconv.Itoa(scenarios[0].SpecDataTableRowIndex)
+	return name + ":" + strconv.Itoa(specDataTableRowIndex)
 }
 
 func getScenarioStatus(result *result.ScenarioResult) status {

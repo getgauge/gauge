@@ -83,8 +83,9 @@ func TestMergeResults(t *testing.T) {
 					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 2,
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex:     2,
+							IsSpecTableDriven: true,
 						},
 					},
 				},
@@ -97,8 +98,9 @@ func TestMergeResults(t *testing.T) {
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 0,
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex:     0,
+							IsSpecTableDriven: true,
 						},
 					},
 				},
@@ -111,8 +113,9 @@ func TestMergeResults(t *testing.T) {
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-							TableRowIndex: 1,
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex:     1,
+							IsSpecTableDriven: true,
 						},
 					},
 				},
@@ -127,20 +130,23 @@ func TestMergeResults(t *testing.T) {
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"}},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 0,
+						Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex:     0,
+						IsSpecTableDriven: true,
 					},
 				},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 1,
+						Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex:     1,
+						IsSpecTableDriven: true,
 					},
 				},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 2,
+						Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex:     2,
+						IsSpecTableDriven: true,
 					},
 				},
 			}, IsTableDriven: false,
@@ -209,8 +215,9 @@ func TestMergeSkippedResults(t *testing.T) {
 					{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading1", SkipErrors: []string{"error"}}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2", SkipErrors: []string{"error"}},
-							TableRowIndex: 0,
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2", SkipErrors: []string{"error"}},
+							TableRowIndex:     0,
+							IsSpecTableDriven: true,
 						},
 					},
 				},
@@ -224,8 +231,9 @@ func TestMergeSkippedResults(t *testing.T) {
 					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
 					{
 						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-							Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2", SkipErrors: []string{"error"}},
-							TableRowIndex: 1,
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, ScenarioHeading: "scenario Heading2", SkipErrors: []string{"error"}},
+							TableRowIndex:     1,
+							IsSpecTableDriven: true,
 						},
 					},
 				},
@@ -241,14 +249,16 @@ func TestMergeSkippedResults(t *testing.T) {
 				{ItemType: gm.ProtoItem_Scenario, Scenario: &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading1"}},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 0,
+						Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex:     0,
+						IsSpecTableDriven: true,
 					},
 				},
 				{
 					ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
-						Scenario:      &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
-						TableRowIndex: 1,
+						Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_SKIPPED, SkipErrors: []string{"error"}, ScenarioHeading: "scenario Heading2"},
+						TableRowIndex:     1,
+						IsSpecTableDriven: true,
 					},
 				},
 			}, IsTableDriven: false,
@@ -441,5 +451,157 @@ func TestMergeResultWithMesages(t *testing.T) {
 
 	if !reflect.DeepEqual(got, want) {
 		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
+	}
+}
+
+func TestMergeResultsWithSpecTableUsedByContextAndScenarioTableDrivenScenarios(t *testing.T) {
+	results := []*result.SpecResult{
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				SpecHeading: "heading",
+				Items: []*gm.ProtoItem{
+					{
+						ItemType: gm.ProtoItem_Table,
+						Table: &gm.ProtoTable{
+							Headers: &gm.ProtoTableRow{Cells: []string{"a"}},
+							Rows:    []*gm.ProtoTableRow{{Cells: []string{"row1"}}},
+						},
+					},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario,
+						TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario: &gm.ProtoScenario{
+								ScenarioHeading: "scenario",
+								ExecutionStatus: gm.ExecutionStatus_PASSED,
+							},
+							// Expanded because the spec-level context uses
+							// the spec table, but the scenario itself uses
+							// only its own scenario table.
+							IsSpecTableDriven:     false,
+							IsScenarioTableDriven: true,
+							TableRowIndex:         -1,
+							ScenarioTableRowIndex: 0,
+						},
+					},
+				},
+			},
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				SpecHeading: "heading",
+				Items: []*gm.ProtoItem{
+					{
+						ItemType: gm.ProtoItem_Table,
+						Table: &gm.ProtoTable{
+							Headers: &gm.ProtoTableRow{Cells: []string{"a"}},
+							Rows:    []*gm.ProtoTableRow{{Cells: []string{"row2"}}},
+						},
+					},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario,
+						TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario: &gm.ProtoScenario{
+								ScenarioHeading: "scenario",
+								ExecutionStatus: gm.ExecutionStatus_PASSED,
+							},
+							IsSpecTableDriven:     false,
+							IsScenarioTableDriven: true,
+							TableRowIndex:         -1,
+							ScenarioTableRowIndex: 1,
+						},
+					},
+				},
+			},
+		},
+	}
+
+	got := mergeResults(results)
+
+	table := got.ProtoSpec.Items[0].Table
+	if len(table.Rows) != 2 {
+		t.Fatalf("expected 2 spec table rows, got %d", len(table.Rows))
+	}
+
+	if gotRow := table.Rows[0].Cells[0]; gotRow != "row1" {
+		t.Errorf("expected first spec table row to be row1, got %q", gotRow)
+	}
+
+	if gotRow := table.Rows[1].Cells[0]; gotRow != "row2" {
+		t.Errorf("expected second spec table row to be row2, got %q", gotRow)
+	}
+
+	for _, item := range got.ProtoSpec.Items {
+		if item.ItemType != gm.ProtoItem_TableDrivenScenario {
+			continue
+		}
+
+		scn := item.TableDrivenScenario
+
+		if scn.TableRowIndex != -1 {
+			t.Errorf("expected TableRowIndex=-1 for scenario-table-only scenario, got %d", scn.TableRowIndex)
+		}
+
+		if !scn.IsSpecTableDriven {
+			if scn.ScenarioTableRowIndex < 0 {
+				t.Errorf("expected valid ScenarioTableRowIndex, got %d", scn.ScenarioTableRowIndex)
+			}
+		}
+	}
+}
+
+func TestMergeResults_DuplicateRowBug(t *testing.T) {
+	// TestMergeResults_DuplicateRowBug reproduces a bug where a spec-table row's
+	// data gets appended to the merged table once per non-spec-table-driven
+	// TableDrivenScenario item sharing that result, instead of once per row.
+	// This happens when a spec is expanded per spec-table row because its
+	// Context/TearDownStep references the spec table's columns, but the one
+	// scenario in the spec has its own 2-row scenario-level table and does not
+	// reference the spec columns directly - so both of its expanded copies
+	// within a single spec-row result have IsSpecTableDriven == false.
+
+	makeRes := func(rowCell string) *result.SpecResult {
+		return &result.SpecResult{
+			ProtoSpec: &gm.ProtoSpec{
+				FileName: "spec.spec",
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{
+						Headers: &gm.ProtoTableRow{Cells: []string{"specParam"}},
+						Rows:    []*gm.ProtoTableRow{{Cells: []string{rowCell}}},
+					}},
+					{ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+						Scenario:              &gm.ProtoScenario{ScenarioHeading: "scenario", ExecutionStatus: gm.ExecutionStatus_PASSED},
+						TableRowIndex:         -1,
+						IsSpecTableDriven:     false,
+						IsScenarioTableDriven: true,
+						ScenarioTableRowIndex: 0,
+					}},
+					{ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+						Scenario:              &gm.ProtoScenario{ScenarioHeading: "scenario", ExecutionStatus: gm.ExecutionStatus_PASSED},
+						TableRowIndex:         -1,
+						IsSpecTableDriven:     false,
+						IsScenarioTableDriven: true,
+						ScenarioTableRowIndex: 1,
+					}},
+				},
+			},
+		}
+	}
+
+	results := []*result.SpecResult{
+		makeRes("row0"),
+		makeRes("row1"),
+	}
+
+	merged := mergeResults(results)
+
+	var mergedTable *gm.ProtoTable
+	for _, item := range merged.ProtoSpec.Items {
+		if item.ItemType == gm.ProtoItem_Table {
+			mergedTable = item.Table
+		}
+	}
+
+	if len(mergedTable.Rows) != 2 {
+		t.Errorf("expected 2 merged rows (one per spec-table row), got %d: %v", len(mergedTable.Rows), mergedTable.Rows)
 	}
 }
