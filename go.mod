@@ -1,25 +1,25 @@
 module github.com/getgauge/gauge
 
-go 1.26
+go 1.27.0
 
 require (
 	github.com/apoorvam/goterminal v0.0.0-20180523175556-614d345c47e5
 	github.com/daviddengcn/go-colortext v1.0.0
 	github.com/fsnotify/fsnotify v1.10.1
-	github.com/getgauge/common v0.0.0-20260806063137-3d3cc21f3722
-	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20260806060657-8a89f7a070a9
+	github.com/getgauge/common v0.0.0-20261012161201-9ac7e937dcfc
+	github.com/getgauge/gauge-proto/go/gauge_messages v0.0.0-20261012161203-9b6484ef5b3a
 	github.com/golang/protobuf v1.5.4
-	github.com/magiconair/properties v1.18.11
+	github.com/magiconair/properties v1.18.12
 	github.com/natefinch/lumberjack v2.0.0+incompatible
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/russross/blackfriday/v2 v2.1.0
 	github.com/schollz/closestmatch v2.1.0+incompatible
 	github.com/sourcegraph/go-langserver v2.0.0+incompatible
-	github.com/sourcegraph/jsonrpc2 v0.2.2
+	github.com/sourcegraph/jsonrpc2 v0.2.3
 	github.com/spf13/cobra v1.10.2
 	github.com/spf13/pflag v1.0.10
-	google.golang.org/genproto/googleapis/rpc v0.0.0-20260819154853-08b0e4226688
-	google.golang.org/grpc v1.83.2
+	google.golang.org/genproto/googleapis/rpc v0.0.0-20261012220534-4341edf3f941
+	google.golang.org/grpc v1.84.0
 	google.golang.org/protobuf v1.36.12
 	gopkg.in/check.v1 v1.0.0-20201130134442-10cb98267c6c
 )
@@ -34,9 +34,9 @@ require (
 	github.com/mattn/go-isatty v0.0.24 // indirect
 	github.com/rogpeppe/go-internal v1.16.0 // indirect
 	go.yaml.in/yaml/v3 v3.0.5 // indirect
-	golang.org/x/net v0.58.0 // indirect
-	golang.org/x/sys v0.47.0 // indirect
-	golang.org/x/text v0.41.0 // indirect
+	golang.org/x/net v0.61.0 // indirect
+	golang.org/x/sys v0.49.0 // indirect
+	golang.org/x/text v0.43.0 // indirect
 	gopkg.in/natefinch/lumberjack.v2 v2.2.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 )

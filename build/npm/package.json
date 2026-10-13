@@ -26,10 +26,10 @@
   "homepage": "https://github.com/getgauge/gauge#readme",
   "devDependencies": {
     "chai": "^6.2.2",
-    "mocha": "^11.8.0",
+    "mocha": "^12.0.2",
     "sinon": "^22.1.0"
   },
   "dependencies": {
-    "adm-zip": "^0.6.0"
+    "adm-zip": "^0.6.1"
   }
 }
