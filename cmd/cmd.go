@@ -161,6 +161,8 @@ func initPackageFlags() {
 	filter.ScenariosName = scenarios
 	execution.MaxRetriesCount = maxRetriesCount
 	execution.RetryOnlyTags = retryOnlyTags
+	execution.MaxStepRetriesCount = maxStepRetriesCount
+	execution.RetryStepOn = retryStepOn
 }
 
 var exit = func(err error, additionalText string) {
