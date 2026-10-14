@@ -35,9 +35,38 @@ func init() {
 	failedMeta = newFailedMetaData()
 }
 
+type failureKey struct {
+	filePath                string
+	line                    int
+	specDataTableRow        int
+	scenarioDataTableRow    int
+	hasSpecDataTableRow     bool
+	hasScenarioDataTableRow bool
+}
+
+func newScenarioFailureKey(filePath string, sce *gauge.Scenario) failureKey {
+	k := failureKey{filePath: filePath, line: sce.Span.Start}
+	if sce.HasSpecDataTable {
+		k.hasSpecDataTableRow = true
+		k.specDataTableRow = sce.SpecDataTableRowIndex
+	}
+	if sce.ScenarioDataTableRow.IsInitialized() {
+		k.hasScenarioDataTableRow = true
+		k.scenarioDataTableRow = sce.ScenarioDataTableRowIndex
+	}
+	return k
+}
+
+func (k failureKey) outputRef() string {
+	if k.line == 0 {
+		return k.filePath
+	}
+	return fmt.Sprintf("%s:%d", k.filePath, k.line)
+}
+
 type failedMetadata struct {
 	Args           []string
-	failedItemsMap map[string]map[string]bool
+	failedItemsMap map[string]map[failureKey]bool
 	FailedItems    []string
 }
 
@@ -46,10 +75,16 @@ func (m *failedMetadata) args() []string {
 }
 
 func (m *failedMetadata) getFailedItems() []string {
+	seen := make(map[string]bool)
 	failedItems := []string{}
 	for _, v := range m.failedItemsMap {
 		for k := range v {
-			failedItems = append(failedItems, k)
+			ref := k.outputRef()
+			if seen[ref] {
+				continue
+			}
+			seen[ref] = true
+			failedItems = append(failedItems, ref)
 		}
 	}
 	return failedItems
@@ -60,17 +95,17 @@ func (m *failedMetadata) aggregateFailedItems() {
 }
 
 func newFailedMetaData() *failedMetadata {
-	return &failedMetadata{Args: make([]string, 0), failedItemsMap: make(map[string]map[string]bool), FailedItems: []string{}}
+	return &failedMetadata{Args: make([]string, 0), failedItemsMap: make(map[string]map[failureKey]bool), FailedItems: []string{}}
 }
 
-func (m *failedMetadata) addFailedItem(itemName string, item string) {
+func (m *failedMetadata) addFailedItem(itemName string, item failureKey) {
 	if _, ok := m.failedItemsMap[itemName]; !ok {
-		m.failedItemsMap[itemName] = make(map[string]bool)
+		m.failedItemsMap[itemName] = make(map[failureKey]bool)
 	}
 	m.failedItemsMap[itemName][item] = true
 }
 
-func (m *failedMetadata) removeFailedItem(itemName string, item string) {
+func (m *failedMetadata) removeFailedItem(itemName string, item failureKey) {
 	if _, ok := m.failedItemsMap[itemName]; !ok {
 		return
 	}
@@ -109,29 +144,29 @@ func ListenFailedScenarios(wg *sync.WaitGroup, specDirs []string) {
 func prepareScenarioFailedMetadata(res *result.ScenarioResult, sce *gauge.Scenario, executionInfo *gauge_messages.ExecutionInfo) {
 	specPath := executionInfo.GetCurrentSpec().GetFileName()
 	failedScenario := util.RelPathToProjectRoot(specPath)
-	scenarioRef := fmt.Sprintf("%s:%v", failedScenario, sce.Span.Start)
+	key := newScenarioFailureKey(failedScenario, sce)
 	if res.GetFailed() {
-		failedMeta.addFailedItem(specPath, scenarioRef)
+		failedMeta.addFailedItem(specPath, key)
 		return
 	}
 	// A scenario can emit multiple ScenarioEnd events when retries are enabled.
 	// If a later retry passes, remove any failed entry captured from earlier attempts.
-	failedMeta.removeFailedItem(specPath, scenarioRef)
+	failedMeta.removeFailedItem(specPath, key)
 }
 
 func addSpecFailedMetadata(res result.Result, args []string) {
 	fileName := util.RelPathToProjectRoot(res.(*result.SpecResult).ProtoSpec.GetFileName())
 	delete(failedMeta.failedItemsMap, fileName)
-	failedMeta.addFailedItem(fileName, fileName)
+	failedMeta.addFailedItem(fileName, failureKey{filePath: fileName})
 }
 
 func addSuiteFailedMetadata(res result.Result, args []string) {
-	failedMeta.failedItemsMap = make(map[string]map[string]bool)
+	failedMeta.failedItemsMap = make(map[string]map[failureKey]bool)
 	for _, arg := range args {
 		path, err := filepath.Abs(arg)
 		path = util.RelPathToProjectRoot(path)
 		if err == nil {
-			failedMeta.addFailedItem(path, path)
+			failedMeta.addFailedItem(path, failureKey{filePath: path})
 		}
 	}
 }
