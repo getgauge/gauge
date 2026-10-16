@@ -23,18 +23,18 @@ func GetSpecsForDataTableRows(s []*gauge.Specification, errMap *gauge.BuildError
 				})
 				if len(tableRelatedScenarios) > 0 {
 					s := createSpecsForTableRows(spec, tableRelatedScenarios, errMap)
-					copiedNonTableScenarios := copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap)
+					copiedNonTableScenarios := copyScenarios(nonTableRelatedScenarios, gauge.Table{}, -1, errMap)
 					s[0].Scenarios = append(s[0].Scenarios, copiedNonTableScenarios...)
 					for _, scn := range copiedNonTableScenarios { // nolint
 						s[0].Items = append(s[0].Items, scn)
 					}
 					specs = append(specs, s...)
 				} else {
-					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
+					specs = append(specs, createSpec(copyScenarios(nonTableRelatedScenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, spec, errMap))
 				}
 			}
 		} else {
-			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, 0, errMap), &gauge.Table{}, spec, errMap))
+			specs = append(specs, createSpec(copyScenarios(spec.Scenarios, gauge.Table{}, -1, errMap), &gauge.Table{}, spec, errMap))
 		}
 	}
 	return
@@ -84,13 +84,15 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 			Comments: scn.Comments,
 			Span:     scn.Span,
 		}
+		// Both indices are -1 when the copy does not run for a row of that table. The spec
+		// table row is kept even if only the spec's context/teardown uses the spec table.
+		newScn.SpecDataTableRowIndex = i
+		newScn.ScenarioDataTableRowIndex = scnTableRowIndex
 		if assignSpecTable {
 			newScn.SpecDataTableRow = table
-			newScn.SpecDataTableRowIndex = i
 		}
 		if scnTableRow.IsInitialized() {
 			newScn.ScenarioDataTableRow = scnTableRow
-			newScn.ScenarioDataTableRowIndex = scnTableRowIndex
 			newScn.DataTable = scn.DataTable
 		}
 		if len(errMap.ScenarioErrs[scn]) > 0 {
@@ -118,7 +120,7 @@ func copyScenarios(scenarios []*gauge.Scenario, table gauge.Table, i int, errMap
 				scns = append(scns, create(scn, *t, i, usesSpecParams))
 			}
 		} else {
-			scns = append(scns, create(scn, gauge.Table{}, 0, table.IsInitialized()))
+			scns = append(scns, create(scn, gauge.Table{}, -1, table.IsInitialized()))
 		}
 	}
 	return
