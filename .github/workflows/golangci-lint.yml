@@ -23,7 +23,7 @@ jobs:
         uses: actions/setup-go@v7
         with:
           check-latest: true
-          go-version-file: 'go.mod'
+          go-version-file: .tool-versions
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:

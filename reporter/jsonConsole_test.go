@@ -88,7 +88,7 @@ func (s *MySuite) TestScenarioEnd_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          false,
+		ExecutionStatus: gauge_messages.ExecutionStatus_PASSED,
 	}
 
 	scenario := &gauge.Scenario{
@@ -127,7 +127,6 @@ func (s *MySuite) TestScenarioEndWithPreHookFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		PreHookFailure: &gauge_messages.ProtoHookFailure{
 			StackTrace:   "stacktrace",
 			ErrorMessage: "message",
@@ -171,7 +170,6 @@ func (s *MySuite) TestScenarioEndWithPostHookFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		PostHookFailure: &gauge_messages.ProtoHookFailure{
 			StackTrace:   "stacktrace",
 			ErrorMessage: "message",
@@ -215,7 +213,6 @@ func (s *MySuite) TestScenarioEndWithPreAndPostHookFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		PreHookFailure: &gauge_messages.ProtoHookFailure{
 			StackTrace:   "stacktrace",
 			ErrorMessage: "message",
@@ -263,7 +260,6 @@ func (s *MySuite) TestScenarioEndWithBeforeStepHookFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
 			{
 				ItemType: gauge_messages.ProtoItem_Step,
@@ -330,7 +326,6 @@ func (s *MySuite) TestScenarioEndWithStepFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
 			{
 				ItemType: gauge_messages.ProtoItem_Step,
@@ -409,7 +404,6 @@ func (s *MySuite) TestScenarioEndWithConceptFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
 			{
 				ItemType: gauge_messages.ProtoItem_Step,
@@ -486,7 +480,6 @@ func (s *MySuite) TestScenarioEndWithAfterStepHookFailure_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario",
-		Failed:          true,
 		ScenarioItems: []*gauge_messages.ProtoItem{
 			{
 				ItemType: gauge_messages.ProtoItem_Step,
@@ -823,7 +816,7 @@ func (s *MySuite) TestScenarioEndWithScenarioDataTable_JSONConsole(c *C) {
 
 	protoScenario := &gauge_messages.ProtoScenario{
 		ScenarioHeading: "Scenario with data table",
-		Failed:          false,
+		ExecutionStatus: gauge_messages.ExecutionStatus_PASSED,
 	}
 
 	scenario := &gauge.Scenario{

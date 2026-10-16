@@ -13,10 +13,43 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"testing"
 
 	"github.com/getgauge/common"
 	. "gopkg.in/check.v1"
 )
+
+type downloadResponseBody struct {
+	*strings.Reader
+	closed bool
+}
+
+func (b *downloadResponseBody) Close() error {
+	b.closed = true
+	return nil
+}
+
+type downloadTransport struct{ response *http.Response }
+
+func (t downloadTransport) RoundTrip(*http.Request) (*http.Response, error) {
+	return t.response, nil
+}
+
+func TestDownloadClosesErrorResponse(t *testing.T) {
+	body := &downloadResponseBody{Reader: strings.NewReader("not found")}
+	previousClient := http.DefaultClient
+	http.DefaultClient = &http.Client{Transport: downloadTransport{response: &http.Response{
+		StatusCode: http.StatusNotFound, Status: "404 Not Found", Body: body,
+	}}}
+	t.Cleanup(func() { http.DefaultClient = previousClient })
+	_, err := Download("http://example.test/plugin.zip", t.TempDir(), "plugin.zip", true)
+	if err == nil {
+		t.Fatal("expected an error for a failed download")
+	}
+	if !body.closed {
+		t.Fatal("error response body was not closed")
+	}
+}
 
 func (s *MySuite) TestDownloadFailureIfFileNotFound(c *C) {
 	handler := func(w http.ResponseWriter, r *http.Request) {

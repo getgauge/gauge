@@ -73,12 +73,13 @@ func (p *plugin) killGrpcProcess() error {
 	}
 	if m == nil || err != nil {
 		errStatus, _ := status.FromError(err)
-		if errStatus.Code() == codes.Unavailable {
-			// Ref https://www.grpc.io/docs/guides/error/#general-errors
-			// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down. Ignore it here.
-			return nil
+		if errStatus.Code() != codes.Unavailable {
+			return err
 		}
-		return err
+		// Ref https://www.grpc.io/docs/guides/error/#general-errors
+		// GRPC_STATUS_UNAVAILABLE is thrown when Server is shutting down.
+		// Fall through to wait for the process to exit so that all
+		// stdout/stderr output is drained before we return.
 	}
 	if p.gRPCConn == nil && p.pluginCmd == nil {
 		return nil
