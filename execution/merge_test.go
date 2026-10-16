@@ -443,3 +443,57 @@ func TestMergeResultWithMesages(t *testing.T) {
 		t.Errorf("Merge data table spec results failed.\n\tWant: %v\n\tGot: %v", want, got)
 	}
 }
+
+func TestMergeResultsWithScenariosNotRunForASpecTableRow(t *testing.T) {
+	// A scenario that does not use the spec table runs only in the first row's spec and
+	// has TableRowIndex -1. It must neither add a spec table row nor be pointed at one.
+	got := mergeResults([]*result.SpecResult{
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"b"}}}}},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:              &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading1"},
+							TableRowIndex:         -1,
+							IsScenarioTableDriven: true,
+						},
+					},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex:     0,
+							IsSpecTableDriven: true,
+						},
+					},
+				},
+			},
+		},
+		{
+			ProtoSpec: &gm.ProtoSpec{
+				Items: []*gm.ProtoItem{
+					{ItemType: gm.ProtoItem_Table, Table: &gm.ProtoTable{Headers: &gm.ProtoTableRow{Cells: []string{"a"}}, Rows: []*gm.ProtoTableRow{{Cells: []string{"c"}}}}},
+					{
+						ItemType: gm.ProtoItem_TableDrivenScenario, TableDrivenScenario: &gm.ProtoTableDrivenScenario{
+							Scenario:          &gm.ProtoScenario{ExecutionStatus: gm.ExecutionStatus_PASSED, ScenarioHeading: "scenario Heading2"},
+							TableRowIndex:     1,
+							IsSpecTableDriven: true,
+						},
+					},
+				},
+			},
+		},
+	})
+
+	wantRows := []*gm.ProtoTableRow{{Cells: []string{"b"}}, {Cells: []string{"c"}}}
+	if gotRows := got.ProtoSpec.Items[0].Table.Rows; !reflect.DeepEqual(gotRows, wantRows) {
+		t.Errorf("Wrong merged table rows.\n\tWant: %v\n\tGot: %v", wantRows, gotRows)
+	}
+	var gotIndexes []int32
+	for _, item := range got.ProtoSpec.Items[1:] {
+		gotIndexes = append(gotIndexes, item.TableDrivenScenario.TableRowIndex)
+	}
+	if wantIndexes := []int32{-1, 0, 1}; !reflect.DeepEqual(gotIndexes, wantIndexes) {
+		t.Errorf("Wrong table row indexes.\n\tWant: %v\n\tGot: %v", wantIndexes, gotIndexes)
+	}
+}
