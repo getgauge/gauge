@@ -69,6 +69,7 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
     var errors []ParseError
     var newToken *Token
     var lastTokenErrorCount int
+    var inFrontMatter bool
     
     // Store lines for multiline detection
     var allLines []string
@@ -86,6 +87,21 @@ func (parser *SpecParser) GenerateTokens(specText, fileName string) ([]*Token, [
             return nil, errors
         }
         trimmedLine := strings.TrimSpace(line)
+
+        if parser.lineNo == 1 && trimmedLine == "---" {
+            inFrontMatter = true
+        }
+        if inFrontMatter {
+            newToken = &Token{Kind: gauge.CommentKind, LineNo: parser.lineNo, Lines: []string{line}, Value: common.TrimTrailingSpace(line), SpanEnd: parser.lineNo}
+            pErrs := parser.accept(newToken, fileName)
+            lastTokenErrorCount = len(pErrs)
+            errors = append(errors, pErrs...)
+            if parser.lineNo > 1 && trimmedLine == "---" {
+                inFrontMatter = false
+            }
+            lineIndex++
+            continue
+        }
         
         if len(trimmedLine) == 0 {
             addStates(&parser.currentState, newLineScope)
