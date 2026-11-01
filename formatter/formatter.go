@@ -118,12 +118,14 @@ func FormatHeading(heading, headingChar string) string {
 	return fmt.Sprintf("%s %s\n", headingChar, trimmedHeading)
 }
 
+var tableCellEscaper = strings.NewReplacer(`\`, `\\`, "|", `\|`)
+
 func FormatTable(table *gauge.Table) string {
 	columnToWidthMap := make(map[int]int)
 	for i, header := range table.Headers {
 		//table.get(header) returns a list of cells in that particular column
 		cells, _ := table.Get(header)
-		columnToWidthMap[i] = findLongestCellWidth(cells, len(header))
+		columnToWidthMap[i] = findLongestCellWidth(cells, len(escapeTableCell(header)))
 	}
 
 	var tableStringBuffer strings.Builder
@@ -135,7 +137,7 @@ func FormatTable(table *gauge.Table) string {
 	_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", getRepeatedChars(" ", tableLeftSpacing))
 	for i, header := range table.Headers {
 		width := columnToWidthMap[i]
-		_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", addPaddingToCell(header, width))
+		_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", addPaddingToCell(escapeTableCell(header), width))
 	}
 
 	tableStringBuffer.WriteString("\n")
@@ -151,12 +153,16 @@ func FormatTable(table *gauge.Table) string {
 		_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", getRepeatedChars(" ", tableLeftSpacing))
 		for i, cell := range row {
 			width := columnToWidthMap[i]
-			_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", addPaddingToCell(cell, width))
+			_, _ = fmt.Fprintf(&tableStringBuffer, "%s|", addPaddingToCell(escapeTableCell(cell), width))
 		}
 		tableStringBuffer.WriteString("\n")
 	}
 
 	return tableStringBuffer.String()
+}
+
+func escapeTableCell(value string) string {
+	return tableCellEscaper.Replace(value)
 }
 
 func addPaddingToCell(cellValue string, width int) string {
@@ -168,7 +174,7 @@ func addPaddingToCell(cellValue string, width int) string {
 func findLongestCellWidth(columnCells []gauge.TableCell, minValue int) int {
 	longestLength := minValue
 	for _, cellValue := range columnCells {
-		cellValueLen := len([]rune(cellValue.GetValue()))
+		cellValueLen := len([]rune(escapeTableCell(cellValue.GetValue())))
 		if cellValueLen > longestLength {
 			longestLength = cellValueLen
 		}
