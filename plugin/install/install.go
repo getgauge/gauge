@@ -132,9 +132,9 @@ func getGoArch() string {
 }
 
 func isPlatformIndependent(zipfile string) bool {
-	re, err := regexp.Compile(`-([a-z]*)\.`)
+	re, err := regexp.Compile(`-[a-z]+\.(?:x86_64|x86|arm64)\.`)
 	if err != nil {
-		logger.Errorf(false, "unable to compile regex '-([a-z]*)\\.': %s", err.Error())
+		logger.Errorf(false, "unable to compile regex '-[a-z]+\\.(?:x86_64|x86|arm64)\\.': %s", err.Error())
 	}
 	return !re.MatchString(zipfile)
 }
@@ -183,7 +183,7 @@ func InstallPluginFromZipFile(zipFile string, pluginName string) InstallResult {
 		return installError(err)
 	}
 
-	pluginInstallDir, err := getPluginInstallDir(gp.ID, getVersionedPluginDirName(zipFile))
+	pluginInstallDir, err := getPluginInstallDir(gp.ID, versionedPluginDirName(zipFile, gp.Version))
 	if err != nil {
 		return installError(err)
 	}
@@ -474,6 +474,13 @@ func (installDesc *installDescription) getLatestCompatibleVersionTo(currentVersi
 
 func (installDesc *installDescription) sortVersionInstallDescriptions() {
 	sort.Sort(byDecreasingVersion(installDesc.Versions))
+}
+
+func versionedPluginDirName(pluginZip, pluginVersion string) string {
+	if dirName := getVersionedPluginDirName(pluginZip); dirName != "" {
+		return dirName
+	}
+	return pluginVersion
 }
 
 func getVersionedPluginDirName(pluginZip string) string {

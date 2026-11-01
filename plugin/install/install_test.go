@@ -7,7 +7,9 @@
 package install
 
 import (
+	"archive/zip"
 	"fmt"
+	"os"
 	"path/filepath"
 	"runtime"
 	"testing"
@@ -84,8 +86,39 @@ func addVersionSupportToInstallDescription(installDescription *installDescriptio
 }
 
 func (s *MySuite) TestInstallPluginFromZipFile(c *C) {
-	result := InstallPluginFromZipFile("zip_with_multiple-dot.s.zip", "ruby")
+	result := InstallPluginFromZipFile("zip_with_multiple-dot.s-fakeos.x86_64.zip", "ruby")
 	c.Assert(result.Error.Error(), Equals, fmt.Sprintf("provided plugin is not compatible with OS %s %s", runtime.GOOS, runtime.GOARCH))
+}
+
+func (s *MySuite) TestInstallPluginFromZipFileWithRenamedZip(c *C) {
+	gaugeHome := c.MkDir()
+	previous, hadPrevious := os.LookupEnv("GAUGE_HOME")
+	c.Assert(os.Setenv("GAUGE_HOME", gaugeHome), IsNil)
+	defer func() {
+		if hadPrevious {
+			_ = os.Setenv("GAUGE_HOME", previous)
+		} else {
+			_ = os.Unsetenv("GAUGE_HOME")
+		}
+	}()
+
+	zipFile := filepath.Join(c.MkDir(), "html-report.zip")
+	out, err := os.Create(zipFile)
+	c.Assert(err, IsNil)
+	w := zip.NewWriter(out)
+	f, err := w.Create("plugin.json")
+	c.Assert(err, IsNil)
+	_, err = f.Write([]byte(`{"id": "html-report", "version": "4.0.9"}`))
+	c.Assert(err, IsNil)
+	c.Assert(w.Close(), IsNil)
+	c.Assert(out.Close(), IsNil)
+
+	result := InstallPluginFromZipFile(zipFile, "html-report")
+
+	c.Assert(result.Error, IsNil)
+	c.Assert(result.Version, Equals, "4.0.9")
+	_, err = os.Stat(filepath.Join(gaugeHome, "plugins", "html-report", "4.0.9", "plugin.json"))
+	c.Assert(err, IsNil)
 }
 
 func (s *MySuite) TestGetVersionedPluginDirName(c *C) {
@@ -170,4 +203,6 @@ func (s *MySuite) TestIsPlatformIndependentZipFile(c *C) {
 	c.Assert(isPlatformIndependent(csharpReleased), Equals, true)
 	c.Assert(isPlatformIndependent(javaNightly), Equals, false)
 	c.Assert(isPlatformIndependent(csharpNightly), Equals, true)
+	c.Assert(isPlatformIndependent("html-report.zip"), Equals, true)
+	c.Assert(isPlatformIndependent("my-plugin-1.0.0-beta.1.zip"), Equals, true)
 }
