@@ -8,7 +8,7 @@
 requests==2.34.2
 
 # Build / codegen
-setuptools==84.1.0
+setuptools==84.2.1
 
 # Publish
 twine==7.0.0
@@ -19,8 +19,8 @@ twine==7.0.0
 # reproducible installs. Do not edit by hand -- regenerate periodically after
 # changing a direct dep
 # =============================================================================
-certifi==2026.10.19
-charset-normalizer==3.5.1
+certifi==2026.10.23
+charset-normalizer==3.5.2
 docutils==0.23
 id==1.6.1
 idna==3.20
@@ -30,7 +30,7 @@ jaraco.functools==4.6.0
 keyring==25.7.0
 markdown-it-py==4.2.0
 mdurl==0.1.2
-more-itertools==11.1.0
+more-itertools==11.2.1
 nh3==0.3.7
 packaging==26.3
 Pygments==2.21.0
