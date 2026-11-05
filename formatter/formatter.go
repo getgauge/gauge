@@ -76,6 +76,9 @@ func FormatStep(step *gauge.Step) string {
 		}
 		text = strings.Replace(text, stripBeforeArg+gauge.ParameterPlaceholder, formattedArg, 1)
 	}
+	if len(step.Args) > paramCount && step.Args[paramCount].ArgType == gauge.SpecialString {
+		text = fmt.Sprintf("%s\n\"\"\"\n%s\n\"\"\"\n%s", text, step.Args[paramCount].Value, step.Suffix)
+	}
 	stepText := ""
 	if strings.HasSuffix(text, "\n") {
 		stepText = fmt.Sprintf("* %s", text)

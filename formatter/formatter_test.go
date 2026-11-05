@@ -110,6 +110,20 @@ func (s *MySuite) TestFormatTable(c *C) {
 	c.Assert(got, Equals, want)
 }
 
+func (s *MySuite) TestFormatSpecificationRetainsMultilineStringArgument(c *C) {
+	texts := []string{
+		"# Spec Heading\n## Scenario Heading\n* Send body\n\"\"\"\n{\"a\": 1}\nsecond line\n\"\"\"\n* Next step\n",
+		"# Spec Heading\n## Scenario Heading\n* Send body\n\"\"\"\nabc\n\"\"\"\n\nsome comment\n\n* Next step\n",
+	}
+	for _, text := range texts {
+		spec, result, err := new(parser.SpecParser).Parse(text, gauge.NewConceptDictionary(), "")
+		c.Assert(err, IsNil)
+		c.Assert(result.Ok, Equals, true)
+
+		c.Assert(FormatSpecification(spec), Equals, text)
+	}
+}
+
 func (s *MySuite) TestFormatTableWithUmlautChars(c *C) {
 	// umlaut characters are unicode and can take up twice the space of regular chars
 	cell1 := gauge.TableCell{Value: "Büsingen", CellType: gauge.Static}
