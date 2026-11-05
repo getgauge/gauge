@@ -128,6 +128,20 @@ func (s *MySuite) TestFormatTableRetainsEscapedCharacters(c *C) {
 	c.Assert(secondTable.Rows(), DeepEquals, [][]string{{"a", "x|y"}, {"b", `p\q`}})
 }
 
+func (s *MySuite) TestFormatTableAlignsEscapedHeadersAndCells(c *C) {
+	text := "# Spec Heading\n## Scenario Heading\n* Step with table\n\n   |a\\|b|v|\n   |----|-|\n   |x\\|y\\|z|p\\\\q|\n"
+	spec, result, err := new(parser.SpecParser).Parse(text, gauge.NewConceptDictionary(), "")
+	c.Assert(err, IsNil)
+	c.Assert(result.Ok, Equals, true)
+	table := spec.Scenarios[0].Steps[0].Args[0].Table
+	c.Assert(table.Headers, DeepEquals, []string{"a|b", "v"})
+	c.Assert(table.Rows(), DeepEquals, [][]string{{"x|y|z", `p\q`}})
+
+	want := "\n   |a\\|b   |v   |\n   |-------|----|\n   |x\\|y\\|z|p\\\\q|\n"
+
+	c.Assert(FormatTable(&table), Equals, want)
+}
+
 func (s *MySuite) TestFormatTableWithUmlautChars(c *C) {
 	// umlaut characters are unicode and can take up twice the space of regular chars
 	cell1 := gauge.TableCell{Value: "Büsingen", CellType: gauge.Static}
