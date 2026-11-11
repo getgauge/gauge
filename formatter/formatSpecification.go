@@ -19,6 +19,13 @@ type formatter struct {
 }
 
 func (formatter *formatter) Specification(specification *gauge.Specification) {
+	for formatter.itemQueue.Peek() != nil {
+		item := formatter.itemQueue.Peek()
+		if item.Kind() != gauge.CommentKind || item.(*gauge.Comment).LineNo >= specification.Heading.LineNo {
+			return
+		}
+		formatter.Comment(formatter.itemQueue.Next().(*gauge.Comment))
+	}
 }
 
 func (formatter *formatter) Heading(heading *gauge.Heading) {
