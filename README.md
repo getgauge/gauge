@@ -30,7 +30,6 @@ Read more about [Why Gauge](https://gauge.org/2018/05/15/why-we-built-gauge/) ca
 |:-------------------------------------:|:-------------------------------:|:-----------------------------------:|:---------------------------------------------:|:---------------------------------------------:|
 | [![i1][userdocs-image]][userdocs]<br>Learn more about using Gauge | [![i2][getstarted-image]][get-started]<br> Getting started with Gauge | [![i3][examples-image]][examples]<br>Some Gauge Examples | [![i4][contributing-image]][contributing]<br>How can you contribute to Gauge? | [![i5][branding-image]][branding]<br>Gauge brand colours, logos, images etc. |
 
-[getstarted-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
 [examples-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/roadmap.png
 [contributing-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/contributing.png
 [branding-image]:https://d3i6fms1cm1j0i.cloudfront.net/github/images/setup.png
