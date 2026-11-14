@@ -36,7 +36,6 @@ Read more about [Why Gauge](https://gauge.org/2018/05/15/why-we-built-gauge/) ca
 [get-started]:https://github.com/getgauge/gauge/wiki/Setup
 [examples]:https://getgauge-examples.github.io/
 [contributing]:CONTRIBUTING.md
-[branding]:https://brand.gauge.org/
 
 ## Questions or need help?
 
