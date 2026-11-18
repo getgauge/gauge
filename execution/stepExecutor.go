@@ -7,6 +7,8 @@
 package execution
 
 import (
+	"regexp"
+
 	"github.com/getgauge/gauge-proto/go/gauge_messages"
 	"github.com/getgauge/gauge/execution/event"
 	"github.com/getgauge/gauge/execution/result"
@@ -39,7 +41,7 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	e.notifyBeforeStepHook(stepResult)
 	if !stepResult.GetFailed() {
 		executeStepMessage := &gauge_messages.Message{MessageType: gauge_messages.Message_ExecuteStep, ExecuteStepRequest: stepRequest}
-		stepExecutionStatus := e.runner.ExecuteAndGetStatus(executeStepMessage)
+		stepExecutionStatus := e.executeStepWithRetries(executeStepMessage)
 		stepExecutionStatus.Message = append(stepResult.ProtoStepExecResult().GetExecutionResult().Message, stepExecutionStatus.Message...)
 		if stepExecutionStatus.GetFailed() {
 			e.currentExecutionInfo.CurrentStep.ErrorMessage = stepExecutionStatus.GetErrorMessage()
@@ -57,6 +59,43 @@ func (e *stepExecutor) executeStep(step *gauge.Step, protoStep *gauge_messages.P
 	event.Notify(event.NewExecutionEvent(event.StepEnd, *step, stepResult, e.stream, e.currentExecutionInfo))
 	defer e.currentExecutionInfo.CurrentStep.Reset()
 	return stepResult
+}
+
+func (e *stepExecutor) executeStepWithRetries(executeStepMessage *gauge_messages.Message) *gauge_messages.ProtoExecutionResult {
+	var stepExecutionStatus *gauge_messages.ProtoExecutionResult
+	for attempt := 0; attempt < MaxStepRetriesCount; attempt++ {
+		stepExecutionStatus = e.runner.ExecuteAndGetStatus(executeStepMessage)
+		if stepExecutionStatus == nil {
+			stepExecutionStatus = &gauge_messages.ProtoExecutionResult{Failed: true, ErrorMessage: "runner returned empty step execution result"}
+		}
+		if !shouldRetryStep(stepExecutionStatus, attempt) {
+			break
+		}
+	}
+	return stepExecutionStatus
+}
+
+func shouldRetryStep(stepExecutionStatus *gauge_messages.ProtoExecutionResult, currentAttempt int) bool {
+	if currentAttempt >= MaxStepRetriesCount-1 || !stepExecutionStatus.GetFailed() || stepExecutionStatus.GetSkipScenario() {
+		return false
+	}
+	if RetryStepOn == "" {
+		return true
+	}
+	stepRetryMatcher, err := regexp.Compile(RetryStepOn)
+	if err != nil {
+		return false
+	}
+	if stepRetryMatcher.MatchString(stepExecutionStatus.GetErrorMessage()) ||
+		stepRetryMatcher.MatchString(stepExecutionStatus.GetStackTrace()) {
+		return true
+	}
+	for _, message := range stepExecutionStatus.GetMessage() {
+		if stepRetryMatcher.MatchString(message) {
+			return true
+		}
+	}
+	return false
 }
 
 func (e *stepExecutor) createStepRequest(protoStep *gauge_messages.ProtoStep) *gauge_messages.ExecuteStepRequest {
@@ -98,5 +137,3 @@ func (e *stepExecutor) notifyAfterStepHook(stepResult *result.StepResult) {
 	m.StepExecutionEndingRequest.StepResult = gauge.ConvertToProtoStepResult(stepResult)
 	e.pluginHandler.NotifyPlugins(m)
 }
-
-
